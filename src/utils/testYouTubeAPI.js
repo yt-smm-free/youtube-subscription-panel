@@ -27,7 +27,7 @@ async function testYouTubeAPI() {
     const oauth2Client = new google.auth.OAuth2(
       process.env.YOUTUBE_CLIENT_ID,
       process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI || 'http://localhost:3000/auth/youtube/callback'
+      process.env.YOUTUBE_REDIRECT_URI || 'http://www.iamjanu.site/auth/youtube/callback'
     );
 
     // Generate authorization URL

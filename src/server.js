@@ -43,7 +43,8 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https://i.ytimg.com", "https://yt3.ggpht.com"],
-      connectSrc: ["'self'", "https://www.googleapis.com"]
+      connectSrc: ["'self'", "https://www.googleapis.com"],
+      frameSrc: ["'self'", "https://accounts.google.com"]
     }
   }
 }));
@@ -63,6 +64,9 @@ app.use(session({
     ttl: 14 * 24 * 60 * 60 // 14 days
   }),
   cookie: {
+     secure: true, // Enable for HTTPS
+    httpOnly: true, // Prevents JavaScript from reading the cookie
+    sameSite: 'lax', // Helps prevent CSRF attacks
     secure: process.env.NODE_ENV === 'production',
     maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
   }
@@ -92,9 +96,10 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).render('error', { 
     message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err : {}
+    error: process.env.NODE_ENV === 'production' ? err : {}
   });
 });
+app.set('trust proxy', 1);
 
 // Start server
 app.listen(PORT, () => {
