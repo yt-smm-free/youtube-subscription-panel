@@ -1,0 +1,114 @@
+<%- include('../layout', { showNav: true }) %>
+
+<div class="admin-new-campaign">
+    <div class="new-campaign-header">
+        <h2 class="glitch-text">New Campaign</h2>
+        <div class="new-campaign-actions">
+            <a href="/admin/campaigns" class="btn btn-secondary">Back to Campaigns</a>
+        </div>
+    </div>
+    
+    <div class="new-campaign-section">
+        <div class="terminal-form">
+            <div class="terminal-header">
+                <span class="terminal-button red"></span>
+                <span class="terminal-button yellow"></span>
+                <span class="terminal-button green"></span>
+                <span class="terminal-title">create_campaign</span>
+            </div>
+            <div class="terminal-body">
+                <div class="terminal-info">
+                    <div class="line">$ <span class="command">checking_authorized_users</span></div>
+                    <div class="line">$ <span class="response">Found <%= authorizedUsers %> authorized users</span></div>
+                    <div class="line">$ <span class="command">initializing_campaign_creator</span></div>
+                    <div class="line">$ <span class="response">Ready to create campaign...</span></div>
+                    <div class="line">$ <span class="cursor"></span></div>
+                </div>
+                
+                <form action="/admin/campaigns" method="POST" class="campaign-form">
+                    <div class="form-group">
+                        <label for="channelUrl">YouTube Channel URL</label>
+                        <input type="text" id="channelUrl" name="channelUrl" required 
+                               placeholder="https://www.youtube.com/channel/CHANNEL_ID">
+                        <p class="form-help">Enter the full URL of the YouTube channel</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="targetSubscribers">Target Subscribers (Optional)</label>
+                        <input type="number" id="targetSubscribers" name="targetSubscribers" min="1" 
+                               placeholder="Leave empty to use all available users">
+                        <p class="form-help">Maximum: <%= authorizedUsers %> (number of authorized users)</p>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Create Campaign</button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="campaign-info-box">
+            <h3>Campaign Information</h3>
+            
+            <div class="info-content">
+                <p>Creating a new campaign will prepare a subscription task for the specified YouTube channel.</p>
+                
+                <h4>Instructions:</h4>
+                <ol>
+                    <li>Enter the full URL of the YouTube channel you want to boost</li>
+                    <li>Optionally specify a target number of subscribers</li>
+                    <li>Click "Create Campaign" to set up the campaign</li>
+                    <li>On the next screen, you can execute the campaign to start the subscription process</li>
+                </ol>
+                
+                <div class="info-note">
+                    <p><strong>Note:</strong> The system will use authorized users to subscribe to the channel. Make sure you have enough authorized users before executing the campaign.</p>
+                    <p>Current authorized users: <span class="highlight"><%= authorizedUsers %></span></p>
+                </div>
+                
+                <h4>URL Format Examples:</h4>
+                <ul>
+                    <li>https://www.youtube.com/channel/UC1234567890abcdefghij</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const channelUrlInput = document.getElementById('channelUrl');
+        const targetSubscribersInput = document.getElementById('targetSubscribers');
+        const maxSubscribers = <%= authorizedUsers %>;
+        
+        // Validate channel URL format
+        channelUrlInput.addEventListener('blur', function() {
+            const url = this.value.trim();
+            
+            if (url && !url.includes('/channel/')) {
+                alert('Please use a channel URL in the format: https://www.youtube.com/channel/CHANNEL_ID');
+            }
+        });
+        
+        // Validate target subscribers
+        targetSubscribersInput.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            
+            if (value > maxSubscribers) {
+                alert(`Maximum target subscribers is ${maxSubscribers} (number of authorized users)`);
+                this.value = maxSubscribers;
+            }
+        });
+        
+        // Form validation
+        document.querySelector('.campaign-form').addEventListener('submit', function(e) {
+            const url = channelUrlInput.value.trim();
+            
+            if (!url.includes('/channel/')) {
+                e.preventDefault();
+                alert('Please use a channel URL in the format: https://www.youtube.com/channel/CHANNEL_ID');
+            }
+        });
+    });
+</script>

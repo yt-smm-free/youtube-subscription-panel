@@ -1,0 +1,36 @@
+{
+  "name": "youtube-subscription-panel",
+  "version": "1.0.0",
+  "description": "SMM panel for YouTube subscriptions",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "init-admin": "node src/utils/initAdmin.js",
+    "test-youtube-api": "node src/utils/testYouTubeAPI.js",
+    "test": "echo &quot;Error: no test specified&quot; && exit 1"
+  },
+  "keywords": ["youtube", "subscription", "smm", "panel"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
+    "connect-mongo": "^5.1.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "googleapis": "^155.0.0",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.17.0",
+    "morgan": "^1.10.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

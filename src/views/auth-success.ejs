@@ -1,0 +1,55 @@
+<%- include('layout', { showNav: false }) %>
+
+<div class="auth-container">
+    <div class="auth-box success">
+        <div class="auth-header">
+            <h2 class="glitch-text">Authorization Successful</h2>
+        </div>
+        
+        <div class="auth-content">
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24" width="64" height="64">
+                    <path fill="#00ff00" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+            </div>
+            
+            <div class="terminal-mini">
+                <div class="terminal-header">
+                    <span class="terminal-button red"></span>
+                    <span class="terminal-button yellow"></span>
+                    <span class="terminal-button green"></span>
+                    <span class="terminal-title">auth_complete</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="line">$ <span class="command">verifying_credentials</span></div>
+                    <div class="line">$ <span class="response">Credentials verified...</span></div>
+                    <div class="line">$ <span class="command">storing_access_token</span></div>
+                    <div class="line">$ <span class="response">Token stored securely...</span></div>
+                    <div class="line">$ <span class="command">authorization_status</span></div>
+                    <div class="line">$ <span class="response success-text">Authorization successful!</span></div>
+                    <div class="line">$ <span class="cursor"></span></div>
+                </div>
+            </div>
+            
+            <p class="auth-message success-message">
+                Your YouTube account has been successfully connected to our system.
+                You can now close this window.
+            </p>
+            
+            <div class="auth-note">
+                <p>Your account will only be used to subscribe to channels when instructed by an admin.</p>
+                <p>You can revoke this authorization at any time from your Google Account settings.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Terminal typing animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const cursor = document.querySelector('.cursor');
+        setInterval(() => {
+            cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+        }, 500);
+    });
+</script>

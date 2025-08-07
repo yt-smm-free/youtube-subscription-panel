@@ -1,0 +1,67 @@
+<%- include('layout', { showNav: false, meta: { googleClientId: process.env.YOUTUBE_CLIENT_ID } }) %>
+
+<div class="hero">
+    <div class="hero-content">
+        <h1 class="glitch-text">YouTube Subscription Panel</h1>
+        <p class="typing-text">Boost your YouTube channel with real subscribers.</p>
+        <div class="cta-buttons">
+            <a href="/admin/login" class="btn btn-primary">Admin Login</a>
+        </div>
+    </div>
+    
+    <div class="terminal">
+        <div class="terminal-header">
+            <span class="terminal-button red"></span>
+            <span class="terminal-button yellow"></span>
+            <span class="terminal-button green"></span>
+            <span class="terminal-title">ytboost_terminal</span>
+        </div>
+        <div class="terminal-body">
+            <div class="line">$ <span class="command">initializing_system</span></div>
+            <div class="line">$ <span class="response">System initialized...</span></div>
+            <div class="line">$ <span class="command">checking_youtube_api</span></div>
+            <div class="line">$ <span class="response">YouTube API connected...</span></div>
+            <div class="line">$ <span class="command">loading_subscription_module</span></div>
+            <div class="line">$ <span class="response">Subscription module ready...</span></div>
+            <div class="line">$ <span class="command">status</span></div>
+            <div class="line">$ <span class="response">All systems operational. Ready to boost subscribers.</span></div>
+            <div class="line">$ <span class="cursor"></span></div>
+        </div>
+    </div>
+</div>
+
+<div class="features">
+    <div class="feature">
+        <div class="feature-icon">
+            <i class="icon-user"></i>
+        </div>
+        <h3>Real Subscribers</h3>
+        <p>Gain authentic YouTube subscribers through our network of real users.</p>
+    </div>
+    
+    <div class="feature">
+        <div class="feature-icon">
+            <i class="icon-shield"></i>
+        </div>
+        <h3>Safe & Secure</h3>
+        <p>Our system uses official YouTube API for all operations. No bots or fake accounts.</p>
+    </div>
+    
+    <div class="feature">
+        <div class="feature-icon">
+            <i class="icon-chart"></i>
+        </div>
+        <h3>Track Progress</h3>
+        <p>Monitor your subscription campaigns in real-time through our dashboard.</p>
+    </div>
+</div>
+
+<script>
+    // Terminal typing animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const cursor = document.querySelector('.cursor');
+        setInterval(() => {
+            cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+        }, 500);
+    });
+</script>

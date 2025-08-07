@@ -1,0 +1,222 @@
+<%- include('../layout', { showNav: true }) %>
+
+<div class="admin-dashboard">
+    <div class="dashboard-header">
+        <h2 class="glitch-text">Admin Dashboard</h2>
+        <div class="dashboard-actions">
+            <a href="/admin/campaigns/new" class="btn btn-primary">New Campaign</a>
+            <a href="/admin/users" class="btn btn-secondary">Manage Users</a>
+        </div>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="32" height="32">
+                    <path fill="#00ff00" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <h3>Total Users</h3>
+                <p class="stat-value"><%= totalUsers %></p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="32" height="32">
+                    <path fill="#00ff00" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <h3>Authorized Users</h3>
+                <p class="stat-value"><%= authorizedUsers %></p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" width="32" height="32">
+                    <path fill="#00ff00" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14h-2V9h-2V7h4v10z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <h3>Success Rate</h3>
+                <p class="stat-value"><%= authorizedUsers > 0 ? Math.round((authorizedUsers / totalUsers) * 100) : 0 %>%</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-section">
+        <h3 class="section-title">Recent Campaigns</h3>
+        
+        <div class="terminal-table">
+            <div class="terminal-header">
+                <span class="terminal-button red"></span>
+                <span class="terminal-button yellow"></span>
+                <span class="terminal-button green"></span>
+                <span class="terminal-title">campaign_data</span>
+            </div>
+            <div class="terminal-body">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Channel</th>
+                            <th>Status</th>
+                            <th>Target</th>
+                            <th>Actual</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (campaigns && campaigns.length > 0) { %>
+                            <% campaigns.forEach(function(campaign) { %>
+                                <tr>
+                                    <td><%= campaign.channelName %></td>
+                                    <td>
+                                        <span class="status-badge status-<%= campaign.status %>">
+                                            <%= campaign.status %>
+                                        </span>
+                                    </td>
+                                    <td><%= campaign.targetSubscribers || 'All' %></td>
+                                    <td><%= campaign.actualSubscribers || 0 %></td>
+                                    <td><%= new Date(campaign.createdAt).toLocaleDateString() %></td>
+                                    <td>
+                                        <a href="/admin/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="no-data">No campaigns found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="view-all-link">
+            <a href="/admin/campaigns" class="btn btn-text">View All Campaigns <span class="arrow">→</span></a>
+        </div>
+    </div>
+    
+    <div class="dashboard-section">
+        <h3 class="section-title">Quick Actions</h3>
+        
+        <div class="quick-actions">
+            <a href="/admin/campaigns/new" class="quick-action-card">
+                <div class="quick-action-icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32">
+                        <path fill="#00ff00" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                </div>
+                <h4>New Campaign</h4>
+                <p>Create a new subscription campaign</p>
+            </a>
+            
+            <a href="/auth/generate-link" class="quick-action-card" id="generate-link">
+                <div class="quick-action-icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32">
+                        <path fill="#00ff00" d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                    </svg>
+                </div>
+                <h4>Generate Login Link</h4>
+                <p>Create a new user login link</p>
+            </a>
+            
+            <a href="/admin/users" class="quick-action-card">
+                <div class="quick-action-icon">
+                    <svg viewBox="0 0 24 24" width="32" height="32">
+                        <path fill="#00ff00" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                </div>
+                <h4>Manage Users</h4>
+                <p>View and manage authorized users</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="link-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Login Link Generated</h3>
+        <div class="terminal-mini">
+            <div class="terminal-header">
+                <span class="terminal-button red"></span>
+                <span class="terminal-button yellow"></span>
+                <span class="terminal-button green"></span>
+                <span class="terminal-title">login_link</span>
+            </div>
+            <div class="terminal-body">
+                <div class="line">$ <span class="command">generating_secure_link</span></div>
+                <div class="line">$ <span class="response">Link generated successfully...</span></div>
+                <div class="line">$ <span class="command">link_details</span></div>
+                <div class="line">$ <span class="response" id="login-link-display">...</span></div>
+                <div class="line">$ <span class="cursor"></span></div>
+            </div>
+        </div>
+        <div class="link-actions">
+            <button id="copy-link" class="btn btn-secondary">Copy Link</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const generateLinkBtn = document.getElementById('generate-link');
+        const modal = document.getElementById('link-modal');
+        const closeModal = document.querySelector('.close-modal');
+        const copyLinkBtn = document.getElementById('copy-link');
+        const loginLinkDisplay = document.getElementById('login-link-display');
+        
+        // Generate link
+        generateLinkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            fetch('/auth/generate-link')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loginLinkDisplay.textContent = data.loginLink;
+                        modal.style.display = 'block';
+                    } else {
+                        alert('Failed to generate login link: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while generating the login link');
+                });
+        });
+        
+        // Close modal
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        // Copy link
+        copyLinkBtn.addEventListener('click', function() {
+            const tempInput = document.createElement('input');
+            tempInput.value = loginLinkDisplay.textContent;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            copyLinkBtn.textContent = 'Copied!';
+            setTimeout(() => {
+                copyLinkBtn.textContent = 'Copy Link';
+            }, 2000);
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+</script>

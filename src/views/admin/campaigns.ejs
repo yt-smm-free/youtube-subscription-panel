@@ -1,0 +1,157 @@
+<%- include('../layout', { showNav: true }) %>
+
+<div class="admin-campaigns">
+    <div class="campaigns-header">
+        <h2 class="glitch-text">Campaigns</h2>
+        <div class="campaigns-actions">
+            <a href="/admin/campaigns/new" class="btn btn-primary">New Campaign</a>
+            <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="campaigns-section">
+        <div class="terminal-table">
+            <div class="terminal-header">
+                <span class="terminal-button red"></span>
+                <span class="terminal-button yellow"></span>
+                <span class="terminal-button green"></span>
+                <span class="terminal-title">campaign_database</span>
+            </div>
+            <div class="terminal-body">
+                <div class="table-filters">
+                    <input type="text" id="campaign-search" placeholder="Search campaigns..." class="search-input">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="pending">Pending</button>
+                        <button class="filter-btn" data-filter="in-progress">In Progress</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                        <button class="filter-btn" data-filter="failed">Failed</button>
+                    </div>
+                </div>
+                
+                <table class="data-table" id="campaigns-table">
+                    <thead>
+                        <tr>
+                            <th>Channel</th>
+                            <th>Status</th>
+                            <th>Target</th>
+                            <th>Actual</th>
+                            <th>Created</th>
+                            <th>Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (campaigns && campaigns.length > 0) { %>
+                            <% campaigns.forEach(function(campaign) { %>
+                                <tr class="campaign-row status-<%= campaign.status %>">
+                                    <td>
+                                        <div class="channel-info">
+                                            <% if (campaign.thumbnailUrl) { %>
+                                                <img src="<%= campaign.thumbnailUrl %>" alt="<%= campaign.channelName %>" class="channel-thumbnail">
+                                            <% } %>
+                                            <span><%= campaign.channelName %></span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-<%= campaign.status %>">
+                                            <%= campaign.status %>
+                                        </span>
+                                    </td>
+                                    <td><%= campaign.targetSubscribers || 'All' %></td>
+                                    <td><%= campaign.actualSubscribers || 0 %></td>
+                                    <td><%= new Date(campaign.createdAt).toLocaleDateString() %></td>
+                                    <td><%= campaign.completedAt ? new Date(campaign.completedAt).toLocaleDateString() : '-' %></td>
+                                    <td>
+                                        <a href="/admin/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
+                                        <% if (campaign.status === 'pending') { %>
+                                            <button class="btn btn-small btn-primary execute-campaign" data-id="<%= campaign._id %>">Execute</button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="no-data">No campaigns found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Table filtering
+        const searchInput = document.getElementById('campaign-search');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const campaignRows = document.querySelectorAll('.campaign-row');
+        
+        // Execute campaign
+        document.querySelectorAll('.execute-campaign').forEach(button => {
+            button.addEventListener('click', function() {
+                const campaignId = this.getAttribute('data-id');
+                
+                if (confirm('Are you sure you want to execute this campaign? This will subscribe all authorized users to the channel.')) {
+                    // Disable button and show loading
+                    this.disabled = true;
+                    this.textContent = 'Processing...';
+                    
+                    fetch(`/admin/campaigns/${campaignId}/execute`, {
+                        method: 'POST'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(`Campaign executed successfully: ${data.successCount} successful subscriptions, ${data.failCount} failed`);
+                                location.reload();
+                            } else {
+                                alert('Failed to execute campaign: ' + data.message);
+                                this.disabled = false;
+                                this.textContent = 'Execute';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while executing the campaign');
+                            this.disabled = false;
+                            this.textContent = 'Execute';
+                        });
+                }
+            });
+        });
+        
+        // Search functionality
+        searchInput.addEventListener('input', filterCampaigns);
+        
+        // Filter buttons
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                filterCampaigns();
+            });
+        });
+        
+        function filterCampaigns() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+            
+            campaignRows.forEach(row => {
+                const channelName = row.querySelector('.channel-info span').textContent.toLowerCase();
+                const status = row.classList.toString().match(/status-([^\s]+)/)[1];
+                
+                const matchesSearch = channelName.includes(searchTerm);
+                let matchesFilter = true;
+                
+                if (activeFilter !== 'all') {
+                    matchesFilter = status === activeFilter;
+                }
+                
+                row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+            });
+        }
+    });
+</script>
