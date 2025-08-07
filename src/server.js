@@ -47,7 +47,11 @@ app.use(helmet({
     }
   }
 }));
-app.use(cors());
+app.use(cors({
+  origin: 'https://www.iamjanu.site', // Replace with your frontend domain
+  credentials: true
+}));
+
 
 // Session configuration
 app.use(session({
