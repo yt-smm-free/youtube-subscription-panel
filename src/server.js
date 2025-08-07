@@ -30,6 +30,12 @@ mongoose.connect(process.env.MONGODB_URI)
     process.exit(1);
   });
 
+  mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -93,14 +99,19 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  
   res.status(500).render('error', { 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'production' ? err : {}
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong!' : err.message,
+    error: process.env.NODE_ENV === 'production' ? {} : err
   });
 });
 app.set('trust proxy', 1);
-
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
