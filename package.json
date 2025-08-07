@@ -10,7 +10,12 @@
     "test-youtube-api": "node src/utils/testYouTubeAPI.js",
     "test": "echo &quot;Error: no test specified&quot; && exit 1"
   },
-  "keywords": ["youtube", "subscription", "smm", "panel"],
+  "keywords": [
+    "youtube",
+    "subscription",
+    "smm",
+    "panel"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -23,6 +28,7 @@
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.2",
     "googleapis": "^155.0.0",
     "helmet": "^8.1.0",
