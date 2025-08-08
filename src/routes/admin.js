@@ -15,9 +15,11 @@ const isAdminAuthenticated = (req, res, next) => {
 };
 
 // Admin login page
+// Admin login page
 router.get('/login', (req, res) => {
-  res.render('admin/login');
+  res.render('admin/login', { showNav: false });
 });
+
 
 // Admin login process
 router.post('/login', async (req, res) => {
