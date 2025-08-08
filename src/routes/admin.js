@@ -442,7 +442,72 @@ async function subscribeUserToChannel(user, campaign) {
     return { success: false, error: error.message };
   }
 }
+ 
+ router.post('/users/authorize-all', isAdminAuthenticated, async (req, res) => {
+  try {
+    // Find all unauthorized users
+    const users = await User.find({ isAuthorized: false });
+    
+    if (users.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No unauthorized users found',
+        authorizedCount: 0
+      });
+    }
+    
+    // Update all users to authorized status
+    const updateResult = await User.updateMany(
+      { isAuthorized: false },
+      { $set: { isAuthorized: true } }
+    );
+    
+    res.json({
+      success: true,
+      message: `${updateResult.modifiedCount} users authorized successfully`,
+      authorizedCount: updateResult.modifiedCount
+    });
+    
+  } catch (error) {
+    console.error('Bulk authorization error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to authorize users'
+    });
+  }
+});
 
+// Toggle user authorization status
+router.post('/users/:loginId/toggle-auth', isAdminAuthenticated, async (req, res) => {
+  try {
+    const { loginId } = req.params;
+    const user = await User.findOne({ loginId });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Toggle authorization status
+    user.isAuthorized = !user.isAuthorized;
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: `User ${user.isAuthorized ? 'authorized' : 'unauthorized'} successfully`,
+      isAuthorized: user.isAuthorized
+    });
+    
+  } catch (error) {
+    console.error('Toggle authorization error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to toggle user authorization'
+    });
+  }
+});
 // Admin logout
 router.get('/logout', (req, res) => {
   req.session.destroy();

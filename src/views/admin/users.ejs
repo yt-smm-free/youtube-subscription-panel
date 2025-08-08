@@ -5,6 +5,7 @@
         <h2 class="glitch-text">Manage Users</h2>
         <div class="users-actions">
             <a href="/auth/generate-link" class="btn btn-primary" id="generate-link">Generate Login Link</a>
+            <button class="btn btn-success" id="authorize-all-users">Authorize All Users</button>
             <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
         </div>
     </div>
@@ -93,9 +94,11 @@
                                     <td><%= user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never' %></td>
                                     <td>
                                         <button class="btn btn-small btn-secondary view-user" data-id="<%= user.loginId %>">View</button>
-                                        <% if (user.isAuthorized) { %>
-                                            <button class="btn btn-small btn-danger revoke-auth" data-id="<%= user.loginId %>">Revoke</button>
-                                        <% } %>
+                                        <button class="btn btn-small <%= user.isAuthorized ? 'btn-danger' : 'btn-success' %> toggle-auth" 
+                                                data-id="<%= user.loginId %>" 
+                                                data-status="<%= user.isAuthorized %>">
+                                            <%= user.isAuthorized ? 'Revoke' : 'Authorize' %>
+                                        </button>
                                     </td>
                                 </tr>
                             <% }); %>
@@ -297,28 +300,71 @@
             userModal.style.display = 'none';
         });
         
-        // Revoke authorization
-        document.querySelectorAll('.revoke-auth').forEach(button => {
+        // Authorize All Users functionality
+        const authorizeAllBtn = document.getElementById('authorize-all-users');
+        authorizeAllBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to authorize ALL pending users? This will allow them to participate in subscription campaigns.')) {
+                // Show loading state
+                const originalText = authorizeAllBtn.textContent;
+                authorizeAllBtn.textContent = 'Authorizing...';
+                authorizeAllBtn.disabled = true;
+                
+                fetch('/admin/users/authorize-all', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Success: ${data.message}`);
+                        location.reload();
+                    } else {
+                        alert(`Error: ${data.message}`);
+                        authorizeAllBtn.textContent = originalText;
+                        authorizeAllBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while authorizing users');
+                    authorizeAllBtn.textContent = originalText;
+                    authorizeAllBtn.disabled = false;
+                });
+            }
+        });
+        
+        // Toggle individual user authorization
+        document.querySelectorAll('.toggle-auth').forEach(button => {
             button.addEventListener('click', function() {
-                if (confirm('Are you sure you want to revoke this user\'s authorization? They will need to re-authorize to participate in campaigns.')) {
-                    const loginId = this.getAttribute('data-id');
+                const loginId = this.getAttribute('data-id');
+                const currentStatus = this.getAttribute('data-status') === 'true';
+                const action = currentStatus ? 'revoke' : 'authorize';
+                
+                if (confirm(`Are you sure you want to ${action} this user's authorization?`)) {
+                    // Show loading state
+                    const originalText = this.textContent;
+                    this.textContent = `${action === 'authorize' ? 'Authorizing' : 'Revoking'}...`;
+                    this.disabled = true;
                     
-                    fetch(`/user/revoke/${loginId}`, {
+                    fetch(`/admin/users/${loginId}/toggle-auth`, {
                         method: 'POST'
                     })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                alert('Authorization revoked successfully');
-                                location.reload();
-                            } else {
-                                alert('Failed to revoke authorization: ' + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('An error occurred while revoking authorization');
-                        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Success: User ${data.isAuthorized ? 'authorized' : 'unauthorized'} successfully`);
+                            location.reload();
+                        } else {
+                            alert(`Error: ${data.message}`);
+                            this.textContent = originalText;
+                            this.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(`An error occurred while ${action === 'authorize' ? 'authorizing' : 'revoking'} the user`);
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    });
                 }
             });
         });

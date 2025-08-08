@@ -70,10 +70,11 @@ router.get('/login/:loginId', async (req, res) => {
       prompt: 'consent' // Force to get refresh token
     });
     
-    // Render login page with auth URL
-    res.render('login', { 
+// Render login page with auth URL and pre-authorization status
+    res.render('user-login', { 
       authUrl,
-      loginId
+      loginId,
+      isPreAuthorized
     });
     
   } catch (error) {

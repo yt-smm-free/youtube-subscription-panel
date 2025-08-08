@@ -1,51 +1,48 @@
 <%- include('layout', { showNav: false }) %>
 
-<div class="admin-auth-container">
-    <div class="admin-auth-box">
-        <div class="admin-auth-header">
-            <h2 class="glitch-text">Admin Access</h2>
+<div class="auth-container">
+    <div class="auth-box">
+        <div class="auth-header">
+            <h2 class="glitch-text">YouTube Authorization</h2>
         </div>
         
-        <div class="admin-auth-content">
+        <div class="auth-content">
             <div class="terminal-mini">
                 <div class="terminal-header">
                     <span class="terminal-button red"></span>
                     <span class="terminal-button yellow"></span>
                     <span class="terminal-button green"></span>
-                    <span class="terminal-title">admin_login</span>
+                    <span class="terminal-title">youtube_auth</span>
                 </div>
                 <div class="terminal-body">
-                    <div class="line">$ <span class="command">initializing_secure_login</span></div>
+                    <div class="line">$ <span class="command">initializing_secure_connection</span></div>
                     <div class="line">$ <span class="response">Secure connection established...</span></div>
-                    <div class="line">$ <span class="command">awaiting_credentials</span></div>
+                    <% if (typeof isPreAuthorized !== 'undefined' && isPreAuthorized) { %>
+                        <div class="line">$ <span class="command">checking_authorization_status</span></div>
+                        <div class="line">$ <span class="response success-text">You are pre-authorized by the admin!</span></div>
+                        <div class="line">$ <span class="response">Please connect your YouTube account to complete the process.</span></div>
+                    <% } else { %>
+                        <div class="line">$ <span class="command">checking_authorization_status</span></div>
+                        <div class="line">$ <span class="response">Authorization required. Please connect your YouTube account.</span></div>
+                    <% } %>
                     <div class="line">$ <span class="cursor"></span></div>
                 </div>
             </div>
             
-            <% if (typeof error !== 'undefined' && error) { %>
-                <div class="error-message">
-                    <p><%= error %></p>
-                </div>
-            <% } %>
+            <div class="auth-actions">
+                <a href="<%= authUrl %>" class="btn btn-primary">
+                    <svg viewBox="0 0 24 24" width="24" height="24" style="vertical-align: middle; margin-right: 8px;">
+                        <path fill="#FFFFFF" d="M21.582,6.186c-0.23-0.86-0.908-1.538-1.768-1.768C18.254,4,12,4,12,4S5.746,4,4.186,4.418 c-0.86,0.23-1.538,0.908-1.768,1.768C2,7.746,2,12,2,12s0,4.254,0.418,5.814c0.23,0.86,0.908,1.538,1.768,1.768 C5.746,20,12,20,12,20s6.254,0,7.814-0.418c0.861-0.23,1.538-0.908,1.768-1.768C22,16.254,22,12,22,12S22,7.746,21.582,6.186z M10,15.464V8.536L16,12L10,15.464z"/>
+                    </svg>
+                    Connect YouTube Account
+                </a>
+            </div>
             
-            <form action="/admin/login" method="POST" class="admin-login-form">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required autocomplete="off">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Login</button>
-                </div>
-            </form>
-            
-            <div class="admin-auth-note">
-                <p>Authorized personnel only. All access attempts are logged.</p>
+            <div class="auth-note">
+                <p>By connecting your YouTube account, you authorize this application to subscribe to channels on your behalf.</p>
+                <% if (typeof isPreAuthorized !== 'undefined' && isPreAuthorized) { %>
+                    <p class="success-text">Your account has been pre-authorized by the admin, which means you'll be able to participate in subscription campaigns immediately after connecting your YouTube account.</p>
+                <% } %>
             </div>
         </div>
     </div>
@@ -58,8 +55,5 @@
         setInterval(() => {
             cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
         }, 500);
-        
-        // Focus on username field
-        document.getElementById('username').focus();
     });
 </script>

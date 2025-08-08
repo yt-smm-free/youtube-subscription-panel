@@ -238,6 +238,17 @@ footer {
     box-shadow: 0 0 10px var(--primary-color);
 }
 
+.btn-success {
+    background-color: var(--success-color);
+    color: var(--secondary-color);
+}
+
+
+.btn-success:hover {
+    background-color: #00cc00;
+    box-shadow: 0 0 10px var(--success-color);
+}
+
 .btn-danger {
     background-color: var(--danger-color);
     color: var(--text-color);
