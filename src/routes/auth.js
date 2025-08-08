@@ -4,11 +4,7 @@ const { google } = require('googleapis');
 const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
 
-// Log request details for debugging
-console.log('OAuth callback received:');
-console.log('Query params:', req.query);
-console.log('Session:', req.session);
-console.log('Headers:', req.headers); 
+
 
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(
@@ -124,6 +120,11 @@ router.get('/google/callback', async (req, res) => {
 });
 // YouTube OAuth callback
 router.get('/youtube/callback', async (req, res) => {
+    console.log('OAuth callback received:');
+  console.log('Query params:', req.query);
+  console.log('Session:', req.session);
+  console.log('Headers:', req.headers);
+
   const { code } = req.query;
   const { loginId } = req.session;
   
