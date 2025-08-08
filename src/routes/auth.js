@@ -20,22 +20,38 @@ const SCOPES = [
 
 // Generate a unique login link
 router.get('/generate-link', (req, res) => {
-  const loginId = uuidv4();
+  // Instead of generating a new UUID each time, use a fixed ID for the admin
+  // This ensures the same link is generated each time
+  const loginId = 'admin-generated-link-' + Date.now().toString().slice(-6);
   
-  // Create a new user with this login ID
-  const newUser = new User({
-    loginId: loginId,
-    isAuthorized: false
-  });
-  
-  newUser.save()
-    .then(() => {
-      const loginLink = `${req.protocol}://${req.get('host')}/auth/login/${loginId}`;
-      res.json({ 
-        success: true, 
-        loginId, 
-        loginLink 
-      });
+  // Check if a user with this login ID already exists
+  User.findOne({ loginId: { $regex: /^admin-generated-link-/ } })
+    .then(existingUser => {
+      if (existingUser) {
+        // If a user already exists, return its login link
+        const loginLink = `${req.protocol}://${req.get('host')}/auth/login/${existingUser.loginId}`;
+        return res.json({ 
+          success: true, 
+          loginId: existingUser.loginId, 
+          loginLink 
+        });
+      } else {
+        // Create a new user with this login ID
+        const newUser = new User({
+          loginId: loginId,
+          isAuthorized: false
+        });
+        
+        return newUser.save()
+          .then(() => {
+            const loginLink = `${req.protocol}://${req.get('host')}/auth/login/${loginId}`;
+            res.json({ 
+              success: true, 
+              loginId, 
+              loginLink 
+            });
+          });
+      }
     })
     .catch(err => {
       console.error('Error generating login link:', err);
@@ -70,11 +86,11 @@ router.get('/login/:loginId', async (req, res) => {
       prompt: 'consent' // Force to get refresh token
     });
     
-// Render login page with auth URL and pre-authorization status
-    res.render('user-login', { 
+    // Render login page with auth URL
+    res.render('login', { 
       authUrl,
       loginId,
-      isPreAuthorized
+      showNav: false
     });
     
   } catch (error) {
@@ -155,7 +171,7 @@ router.get('/youtube/callback', async (req, res) => {
     await user.save();
     
     // Redirect to success page
-    res.render('auth-success');
+    res.render('auth-success', { showNav: false });
     
   } catch (error) {
     console.error('OAuth callback error:', error);

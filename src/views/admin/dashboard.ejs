@@ -41,21 +41,65 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <h3>Success Rate</h3>
-                <p class="stat-value"><%= authorizedUsers > 0 ? Math.round((authorizedUsers / totalUsers) * 100) : 0 %>%</p>
+                <h3>Campaigns</h3>
+                <p class="stat-value"><%= campaigns.length %></p>
             </div>
         </div>
     </div>
     
     <div class="dashboard-section">
-        <h3 class="section-title">Recent Campaigns</h3>
+        <div class="section-title">
+            <h3>Quick Actions</h3>
+        </div>
+        
+        <div class="quick-actions">
+            <div class="quick-action-card" id="generate-link-card">
+                <div class="quick-action-icon">
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                        <path fill="#00ff00" d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
+                    </svg>
+                </div>
+                <h4>Generate User Login Link</h4>
+                <p>Create a link for users to authorize their YouTube accounts</p>
+                <button class="btn btn-primary" id="generate-login-link">Generate Link</button>
+            </div>
+            
+            <div class="quick-action-card">
+                <div class="quick-action-icon">
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                        <path fill="#00ff00" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                </div>
+                <h4>Create New Campaign</h4>
+                <p>Start a new subscription campaign for all authorized users</p>
+                <a href="/admin/campaigns/new" class="btn btn-primary">New Campaign</a>
+            </div>
+            
+            <div class="quick-action-card">
+                <div class="quick-action-icon">
+                    <svg viewBox="0 0 24 24" width="48" height="48">
+                        <path fill="#00ff00" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                </div>
+                <h4>Manage Users</h4>
+                <p>View and manage all authorized users</p>
+                <a href="/admin/users" class="btn btn-primary">View Users</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-section">
+        <div class="section-title">
+            <h3>Recent Campaigns</h3>
+            <a href="/admin/campaigns" class="view-all-link">View All <span class="arrow">→</span></a>
+        </div>
         
         <div class="terminal-table">
             <div class="terminal-header">
                 <span class="terminal-button red"></span>
                 <span class="terminal-button yellow"></span>
                 <span class="terminal-button green"></span>
-                <span class="terminal-title">campaign_data</span>
+                <span class="terminal-title">recent_campaigns</span>
             </div>
             <div class="terminal-body">
                 <table class="data-table">
@@ -63,8 +107,7 @@
                         <tr>
                             <th>Channel</th>
                             <th>Status</th>
-                            <th>Target</th>
-                            <th>Actual</th>
+                            <th>Subscribers</th>
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
@@ -73,14 +116,18 @@
                         <% if (campaigns && campaigns.length > 0) { %>
                             <% campaigns.forEach(function(campaign) { %>
                                 <tr>
-                                    <td><%= campaign.channelName %></td>
+                                    <td>
+                                        <div class="channel-info">
+                                            <img src="<%= campaign.thumbnailUrl %>" alt="<%= campaign.channelName %>" class="channel-thumbnail">
+                                            <%= campaign.channelName %>
+                                        </div>
+                                    </td>
                                     <td>
                                         <span class="status-badge status-<%= campaign.status %>">
-                                            <%= campaign.status %>
+                                            <%= campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1) %>
                                         </span>
                                     </td>
-                                    <td><%= campaign.targetSubscribers || 'All' %></td>
-                                    <td><%= campaign.actualSubscribers || 0 %></td>
+                                    <td><%= campaign.actualSubscribers || 0 %> / <%= campaign.targetSubscribers || 'All' %></td>
                                     <td><%= new Date(campaign.createdAt).toLocaleDateString() %></td>
                                     <td>
                                         <a href="/admin/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
@@ -89,52 +136,12 @@
                             <% }); %>
                         <% } else { %>
                             <tr>
-                                <td colspan="6" class="no-data">No campaigns found</td>
+                                <td colspan="5" class="no-data">No campaigns found</td>
                             </tr>
                         <% } %>
                     </tbody>
                 </table>
             </div>
-        </div>
-        
-        <div class="view-all-link">
-            <a href="/admin/campaigns" class="btn btn-text">View All Campaigns <span class="arrow">→</span></a>
-        </div>
-    </div>
-    
-    <div class="dashboard-section">
-        <h3 class="section-title">Quick Actions</h3>
-        
-        <div class="quick-actions">
-            <a href="/admin/campaigns/new" class="quick-action-card">
-                <div class="quick-action-icon">
-                    <svg viewBox="0 0 24 24" width="32" height="32">
-                        <path fill="#00ff00" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                    </svg>
-                </div>
-                <h4>New Campaign</h4>
-                <p>Create a new subscription campaign</p>
-            </a>
-            
-            <a href="/auth/generate-link" class="quick-action-card" id="generate-link">
-                <div class="quick-action-icon">
-                    <svg viewBox="0 0 24 24" width="32" height="32">
-                        <path fill="#00ff00" d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-                    </svg>
-                </div>
-                <h4>Generate Login Link</h4>
-                <p>Create a new user login link</p>
-            </a>
-            
-            <a href="/admin/users" class="quick-action-card">
-                <div class="quick-action-icon">
-                    <svg viewBox="0 0 24 24" width="32" height="32">
-                        <path fill="#00ff00" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                    </svg>
-                </div>
-                <h4>Manage Users</h4>
-                <p>View and manage authorized users</p>
-            </a>
         </div>
     </div>
 </div>
@@ -161,40 +168,53 @@
         <div class="link-actions">
             <button id="copy-link" class="btn btn-secondary">Copy Link</button>
         </div>
+        <div class="auth-note">
+            <p>Share this link with users to authorize their YouTube accounts.</p>
+            <p>This link will always be the same and can be used multiple times.</p>
+        </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const generateLinkBtn = document.getElementById('generate-link');
-        const modal = document.getElementById('link-modal');
-        const closeModal = document.querySelector('.close-modal');
+        // Generate link functionality
+        const generateLinkBtn = document.getElementById('generate-login-link');
+        const linkModal = document.getElementById('link-modal');
+        const closeLinkModal = linkModal.querySelector('.close-modal');
         const copyLinkBtn = document.getElementById('copy-link');
         const loginLinkDisplay = document.getElementById('login-link-display');
         
         // Generate link
-        generateLinkBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        generateLinkBtn.addEventListener('click', function() {
+            // Show loading state
+            generateLinkBtn.textContent = 'Generating...';
+            generateLinkBtn.disabled = true;
             
             fetch('/auth/generate-link')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         loginLinkDisplay.textContent = data.loginLink;
-                        modal.style.display = 'block';
+                        linkModal.style.display = 'block';
+                        generateLinkBtn.textContent = 'Generate Link';
+                        generateLinkBtn.disabled = false;
                     } else {
                         alert('Failed to generate login link: ' + data.message);
+                        generateLinkBtn.textContent = 'Generate Link';
+                        generateLinkBtn.disabled = false;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('An error occurred while generating the login link');
+                    generateLinkBtn.textContent = 'Generate Link';
+                    generateLinkBtn.disabled = false;
                 });
         });
         
-        // Close modal
-        closeModal.addEventListener('click', function() {
-            modal.style.display = 'none';
+        // Close link modal
+        closeLinkModal.addEventListener('click', function() {
+            linkModal.style.display = 'none';
         });
         
         // Copy link
@@ -214,9 +234,15 @@
         
         // Close modal when clicking outside
         window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            if (event.target === linkModal) {
+                linkModal.style.display = 'none';
             }
         });
+        
+        // Terminal typing animation
+        const cursor = document.querySelector('.cursor');
+        setInterval(() => {
+            cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+        }, 500);
     });
 </script>

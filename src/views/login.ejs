@@ -17,14 +17,8 @@
                 <div class="terminal-body">
                     <div class="line">$ <span class="command">initializing_secure_connection</span></div>
                     <div class="line">$ <span class="response">Secure connection established...</span></div>
-                    <% if (typeof isPreAuthorized !== 'undefined' && isPreAuthorized) { %>
-                        <div class="line">$ <span class="command">checking_authorization_status</span></div>
-                        <div class="line">$ <span class="response success-text">You are pre-authorized by the admin!</span></div>
-                        <div class="line">$ <span class="response">Please connect your YouTube account to complete the process.</span></div>
-                    <% } else { %>
-                        <div class="line">$ <span class="command">checking_authorization_status</span></div>
-                        <div class="line">$ <span class="response">Authorization required. Please connect your YouTube account.</span></div>
-                    <% } %>
+                    <div class="line">$ <span class="command">checking_authorization_status</span></div>
+                    <div class="line">$ <span class="response">Authorization required. Please connect your YouTube account.</span></div>
                     <div class="line">$ <span class="cursor"></span></div>
                 </div>
             </div>
@@ -40,9 +34,7 @@
             
             <div class="auth-note">
                 <p>By connecting your YouTube account, you authorize this application to subscribe to channels on your behalf.</p>
-                <% if (typeof isPreAuthorized !== 'undefined' && isPreAuthorized) { %>
-                    <p class="success-text">Your account has been pre-authorized by the admin, which means you'll be able to participate in subscription campaigns immediately after connecting your YouTube account.</p>
-                <% } %>
+                <p>This is a one-time authorization. After connecting, you can close this page.</p>
             </div>
         </div>
     </div>
