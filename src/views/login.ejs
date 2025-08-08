@@ -1,43 +1,51 @@
-<% layout('layout') -%>
-<!-- <%- include('layout', { showNav: false, meta: { googleClientId: process.env.YOUTUBE_CLIENT_ID } }) %> -->
-<div class="auth-container">
-    <div class="auth-box">
-        <div class="auth-header">
-            <h2 class="glitch-text">YouTube Authorization</h2>
+<% layout('layout') %>
+
+<div class="admin-auth-container">
+    <div class="admin-auth-box">
+        <div class="admin-auth-header">
+            <h2 class="glitch-text">Admin Access</h2>
         </div>
         
-        <div class="auth-content">
+        <div class="admin-auth-content">
             <div class="terminal-mini">
                 <div class="terminal-header">
                     <span class="terminal-button red"></span>
                     <span class="terminal-button yellow"></span>
                     <span class="terminal-button green"></span>
-                    <span class="terminal-title">secure_connection</span>
+                    <span class="terminal-title">admin_login</span>
                 </div>
                 <div class="terminal-body">
-                    <div class="line">$ <span class="command">initializing_secure_connection</span></div>
-                    <div class="line">$ <span class="response">Connection established...</span></div>
-                    <div class="line">$ <span class="command">preparing_youtube_auth</span></div>
-                    <div class="line">$ <span class="response">Ready for authorization...</span></div>
+                    <div class="line">$ <span class="command">initializing_secure_login</span></div>
+                    <div class="line">$ <span class="response">Secure connection established...</span></div>
+                    <div class="line">$ <span class="command">awaiting_credentials</span></div>
                     <div class="line">$ <span class="cursor"></span></div>
                 </div>
             </div>
             
-            <p class="auth-message">
-                To continue, you need to authorize this application to access your YouTube account.
-                This will allow the system to subscribe to channels on your behalf.
-            </p>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="error-message">
+                    <p><%= error %></p>
+                </div>
+            <% } %>
             
-            <div class="auth-actions">
-                <a href="<%= authUrl %>" class="btn btn-youtube">
-                    <span class="btn-icon">▶</span>
-                    Authorize with YouTube
-                </a>
-            </div>
+            <form action="/admin/login" method="POST" class="admin-login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+            </form>
             
-            <div class="auth-info">
-                <p>Your login ID: <span class="highlight"><%= loginId %></span></p>
-                <p class="auth-note">Note: This application will only subscribe to channels when instructed by an admin.</p>
+            <div class="admin-auth-note">
+                <p>Authorized personnel only. All access attempts are logged.</p>
             </div>
         </div>
     </div>
@@ -50,5 +58,8 @@
         setInterval(() => {
             cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
         }, 500);
+        
+        // Focus on username field
+        document.getElementById('username').focus();
     });
 </script>

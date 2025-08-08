@@ -11,6 +11,7 @@
     <% if (typeof meta !== 'undefined' && meta.googleClientId) { %>
     <meta name="google-signin-client_id" content="<%= meta.googleClientId %>">
     <% } %>
+    <%- style %>
 </head>
 <body>
     <div class="container">
@@ -46,5 +47,6 @@
             <script src="<%= script %>"></script>
         <% }); %>
     <% } %>
+    <%- script %>
 </body>
 </html>

@@ -8,12 +8,12 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const expressLayouts = require('express-ejs-layouts'); // Add this line
+const expressLayouts = require('express-ejs-layouts');
 
 // Load environment variables
 dotenv.config();
 
-// Import routes (will create these later)
+// Import routes
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
@@ -78,11 +78,13 @@ app.use(session({
   }
 }));
 
-// Set up EJS with layouts
-app.use(expressLayouts); // Add this line
+// Set up EJS with layouts - IMPORTANT: This must be before setting view engine
+app.use(expressLayouts);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.set('layout', 'layout'); // Add this line
+app.set('layout', 'layout');
+app.set("layout extractScripts", true);
+app.set("layout extractStyles", true);
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
