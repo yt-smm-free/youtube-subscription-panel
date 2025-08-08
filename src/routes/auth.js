@@ -194,7 +194,7 @@ try {
       showNav: false
     });
   }
-  
+
   // Save the tokens and user info
   user.youtubeId = channel.id;
   user.accessToken = tokens.access_token;  // Use the tokens variable defined above
