@@ -1,4 +1,6 @@
 <% layout('layout') %>
+<% if (typeof showNav === 'undefined') { var showNav = false; } %>
+
 <div class="auth-container">
     <div class="auth-box error">
         <div class="auth-header">
@@ -48,7 +50,7 @@
     </div>
 </div>
 
-<script>
+<% script(`
     // Terminal typing animation
     document.addEventListener('DOMContentLoaded', function() {
         const cursor = document.querySelector('.cursor');
@@ -56,4 +58,4 @@
             cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
         }, 500);
     });
-</script>
+`) %>

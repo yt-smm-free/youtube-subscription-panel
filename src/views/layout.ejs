@@ -11,7 +11,7 @@
     <% if (typeof meta !== 'undefined' && meta.googleClientId) { %>
     <meta name="google-signin-client_id" content="<%= meta.googleClientId %>">
     <% } %>
-    <%- style %>
+    <%- typeof style !== 'undefined' ? style : '' %>
 </head>
 <body>
     <div class="container">
@@ -19,7 +19,7 @@
             <div class="logo">
                 <h1>YT<span>BOOST</span></h1>
             </div>
-            <% if (typeof showNav !== 'undefined' && showNav) { %>
+            <% if (typeof showNav === 'undefined' || showNav) { %>
             <nav>
                 <ul>
                     <li><a href="/">Home</a></li>
@@ -47,6 +47,6 @@
             <script src="<%= script %>"></script>
         <% }); %>
     <% } %>
-    <%- script %>
+    <%- typeof script !== 'undefined' ? script : '' %>
 </body>
 </html>

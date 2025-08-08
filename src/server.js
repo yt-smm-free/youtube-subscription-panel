@@ -83,8 +83,6 @@ app.use(expressLayouts);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layout');
-app.set("layout extractScripts", true);
-app.set("layout extractStyles", true);
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -96,7 +94,7 @@ app.use('/user', userRoutes);
 
 // Home route
 app.get('/', (req, res) => {
-  res.render('index');
+  res.render('index', { showNav: true });
 });
 
 // Error handling middleware
@@ -106,7 +104,8 @@ app.use((err, req, res, next) => {
   
   res.status(500).render('error', { 
     message: process.env.NODE_ENV === 'production' ? 'Something went wrong!' : err.message,
-    error: process.env.NODE_ENV === 'production' ? {} : err
+    error: process.env.NODE_ENV === 'production' ? {} : err,
+    showNav: false
   });
 });
 
