@@ -143,97 +143,93 @@ router.get('/youtube/callback', async (req, res) => {
     });
   }
   
-  try {
-    // Exchange code for tokens
 try {
-  // Exchange code for tokens with detailed error handling
+  // Exchange code for tokens
   console.log('Attempting to exchange code for tokens...');
-  const tokenResponse = await oauth2Client.getToken(code).catch(err => {
-    console.error('Token exchange error details:', err);
-    throw new Error(`Token exchange failed: ${err.message}`);
-  });
+  const tokenResponse = await oauth2Client.getToken(code);
+  const tokens = tokenResponse.tokens;  // Store tokens in a variable that's accessible throughout the function
   
-  const { tokens } = tokenResponse;
   console.log('Tokens received successfully');
-  
-  // Log token info (without exposing the actual tokens)
   console.log('Token info:', {
     hasAccessToken: !!tokens.access_token,
     hasRefreshToken: !!tokens.refresh_token,
     expiryDate: tokens.expiry_date
   });
   
+  // Set credentials with the tokens
   oauth2Client.setCredentials(tokens);
   
-  // Continue with the rest of your code...
-} catch (tokenError) {
-  console.error('Token exchange error:', tokenError);
-  return res.status(400).render('error', { 
-    message: `Authentication failed during token exchange: ${tokenError.message}`,
-    error: tokenError,
-    showNav: false
+  // Get user info from YouTube
+  const youtube = google.youtube({
+    version: 'v3',
+    auth: oauth2Client
   });
-}  
-    
-    // Get user info from YouTube
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: oauth2Client
-    });
-    
-    const people = google.people({
-      version: 'v1',
-      auth: oauth2Client
-    });
-    
-    // Get channel info
-    const channelResponse = await youtube.channels.list({
-      part: 'snippet',
-      mine: true
-    });
-    
-    // Get user profile
-    const peopleResponse = await people.people.get({
-      resourceName: 'people/me',
-      personFields: 'emailAddresses,names,photos'
-    });
-    
-    const channel = channelResponse.data.items[0];
-    const profile = peopleResponse.data;
-    
-    // Update user with YouTube info
-    const user = await User.findOne({ loginId });
-    
-    if (!user) {
-      return res.status(404).render('error', { 
-        message: 'User not found. Please try again.' 
-      });
-    }
-    
-    user.youtubeId = channel.id;
-    user.accessToken = tokens.access_token;
-    user.refreshToken = tokens.refresh_token;
-    user.tokenExpiry = new Date(tokens.expiry_date);
-    user.name = channel.snippet.title;
-    user.profilePicture = channel.snippet.thumbnails.default.url;
-    user.email = profile.emailAddresses ? profile.emailAddresses[0].value : '';
-    user.isAuthorized = true;
-    user.lastLogin = new Date();
-    
-    await user.save();
-    
-    // Redirect to success page
-    res.render('auth-success', { showNav: false });
-    
-  } catch (error) {
-    console.error('OAuth callback error:', error);
-    res.status(500).render('error', { 
-      message: 'Failed to complete authentication' + error.message,
-    error: error,
-    showNav: false
+  
+  const people = google.people({
+    version: 'v1',
+    auth: oauth2Client
+  });
+  
+  // Get channel info
+  const channelResponse = await youtube.channels.list({
+    part: 'snippet',
+    mine: true
+  });
+  
+  // Get user profile
+  const peopleResponse = await people.people.get({
+    resourceName: 'people/me',
+    personFields: 'emailAddresses,names,photos'
+  });
+  
+  const channel = channelResponse.data.items[0];
+  const profile = peopleResponse.data;
+  
+  // Update user with YouTube info
+  const user = await User.findOne({ loginId });
+  
+  if (!user) {
+    return res.status(404).render('error', { 
+      message: 'User not found. Please try again.',
+      showNav: false
     });
   }
-});
+  
+  // Save the tokens and user info
+  user.youtubeId = channel.id;
+  user.accessToken = tokens.access_token;  // Use the tokens variable defined above
+  user.refreshToken = tokens.refresh_token;
+  user.tokenExpiry = new Date(tokens.expiry_date);
+  user.name = channel.snippet.title;
+  user.profilePicture = channel.snippet.thumbnails.default.url;
+  user.email = profile.emailAddresses ? profile.emailAddresses[0].value : '';
+  user.isAuthorized = true;
+  user.lastLogin = new Date();
+  
+  await user.save();
+  
+  // Redirect to success page
+  res.render('auth-success', { showNav: false });
+  
+} catch (error) {
+  console.error('OAuth callback error:', error);
+  res.status(500).render('error', { 
+    message: 'Failed to complete authentication: ' + error.message,
+    error: error,
+    showNav: false
+  });
+}
+
+const tokenResponse = await oauth2Client.getToken(code);
+console.log('Token response structure:', Object.keys(tokenResponse));
+
+// Check if tokens exist in the response
+if (!tokenResponse.tokens) {
+  console.error('Tokens not found in response. Full response:', tokenResponse);
+  throw new Error('Tokens not found in OAuth response');
+}
+
+const tokens = tokenResponse.tokens;
 
 // Check authorization status
 router.get('/status/:loginId', async (req, res) => {
