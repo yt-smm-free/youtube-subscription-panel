@@ -22,20 +22,19 @@ const userRoutes = require('./routes/user');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
-
-  mongoose.connect(process.env.MONGODB_URI, {
+// Connect to MongoDB with all options
+mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
 })
+.then(() => console.log('MongoDB connected'))
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -54,13 +53,17 @@ app.use(helmet({
     }
   }
 }));
+
+// Updated CORS configuration to allow both www and non-www domains
 app.use(cors({
-  origin: 'https://www.iamjanu.site', // Replace with your frontend domain
+  origin: [
+    'https://www.iamjanu.site',
+    'https://iamjanu.site'
+  ],
   credentials: true
 }));
 
-
-// Session configuration
+// Session configuration with fixed cookie settings
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -70,10 +73,9 @@ app.use(session({
     ttl: 14 * 24 * 60 * 60 // 14 days
   }),
   cookie: {
-     secure: true, // Enable for HTTPS
     httpOnly: true, // Prevents JavaScript from reading the cookie
     sameSite: 'lax', // Helps prevent CSRF attacks
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production', // Enable for HTTPS in production
     maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days
   }
 }));
@@ -107,11 +109,15 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'production' ? {} : err
   });
 });
+
+// Trust proxy setting for running behind a proxy (like render.com)
 app.set('trust proxy', 1);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
