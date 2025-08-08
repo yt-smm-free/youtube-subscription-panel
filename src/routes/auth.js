@@ -219,17 +219,7 @@ try {
     showNav: false
   });
 }
-
-const tokenResponse = await oauth2Client.getToken(code);
-console.log('Token response structure:', Object.keys(tokenResponse));
-
-// Check if tokens exist in the response
-if (!tokenResponse.tokens) {
-  console.error('Tokens not found in response. Full response:', tokenResponse);
-  throw new Error('Tokens not found in OAuth response');
-}
-
-const tokens = tokenResponse.tokens;
+} );
 
 // Check authorization status
 router.get('/status/:loginId', async (req, res) => {
