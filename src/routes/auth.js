@@ -83,7 +83,8 @@ router.get('/login/:loginId', async (req, res) => {
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES,
-      prompt: 'consent' // Force to get refresh token
+      prompt: 'consent' , // Force to get refresh token
+       include_granted_scopes: true  // Include previously granted scopes
     });
     
     // Render login page with auth URL
@@ -101,6 +102,20 @@ router.get('/login/:loginId', async (req, res) => {
   }
 });
 
+// Google OAuth callback - new route to handle Google's callback
+router.get('/google/callback', async (req, res) => {
+  const { code, error } = req.query;
+  const { loginId } = req.session;
+  
+  // Handle OAuth errors
+  if (error) {
+    console.error('OAuth error:', error);
+    return res.status(400).render('error', { 
+      message: `Authorization failed: ${error}`,
+      showNav: false
+    });
+  }
+});
 // YouTube OAuth callback
 router.get('/youtube/callback', async (req, res) => {
   const { code } = req.query;
@@ -210,4 +225,4 @@ router.get('/status/:loginId', async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router; 

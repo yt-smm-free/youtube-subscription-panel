@@ -41,12 +41,33 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://apis.google.com",
+        "https://accounts.google.com",
+        "https://www.googleapis.com"
+      ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://i.ytimg.com", "https://yt3.ggpht.com"],
-      connectSrc: ["'self'", "https://www.googleapis.com"],
-      frameSrc: ["'self'", "https://accounts.google.com"]
+      imgSrc: [
+        "'self'", 
+        "data:", 
+        "https://i.ytimg.com", 
+        "https://yt3.ggpht.com",
+        "https://lh3.googleusercontent.com"
+      ],
+      connectSrc: [
+        "'self'", 
+        "https://www.googleapis.com",
+        "https://accounts.google.com",
+        "https://oauth2.googleapis.com"
+      ],
+      frameSrc: [
+        "'self'", 
+        "https://accounts.google.com",
+        "https://content.googleapis.com"
+      ]
     }
   }
 }));
@@ -55,9 +76,14 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'https://www.iamjanu.site',
-    'https://iamjanu.site'
+    'https://iamjanu.site',
+    /\.googleusercontent\.com$/,
+    /\.googleapis\.com$/,
+    /\.google\.com$/
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Session configuration with fixed cookie settings
@@ -93,7 +119,14 @@ app.use('/user', userRoutes);
 app.get('/', (req, res) => {
   res.render('index', { showNav: true });
 });
-
+app.get('/debug-auth', (req, res) => {
+  res.json({
+    session: req.session,
+    cookies: req.cookies,
+    query: req.query,
+    headers: req.headers
+  });
+});
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
