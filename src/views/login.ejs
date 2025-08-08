@@ -1,4 +1,4 @@
-<% layout('../layout') %>
+<%- include('../layout', { showNav: false }) %>
 
 <div class="admin-auth-container">
     <div class="admin-auth-box">
@@ -51,7 +51,7 @@
     </div>
 </div>
 
-<% script(`
+<script>
     // Terminal typing animation
     document.addEventListener('DOMContentLoaded', function() {
         const cursor = document.querySelector('.cursor');
@@ -62,4 +62,4 @@
         // Focus on username field
         document.getElementById('username').focus();
     });
-`) %>
+</script>

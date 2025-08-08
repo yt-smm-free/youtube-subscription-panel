@@ -8,7 +8,6 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const expressLayouts = require('express-ejs-layouts');
 
 // Load environment variables
 dotenv.config();
@@ -63,7 +62,7 @@ app.use(cors({
 
 // Session configuration with fixed cookie settings
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'hatsfFDJghfh3455dfgg',
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ 
@@ -78,11 +77,9 @@ app.use(session({
   }
 }));
 
-// Set up EJS with layouts - IMPORTANT: This must be before setting view engine
-app.use(expressLayouts);
+// Set up EJS without layouts
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
-app.set('layout', 'layout');
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
