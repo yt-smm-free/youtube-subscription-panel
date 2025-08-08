@@ -12,7 +12,10 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.YOUTUBE_CLIENT_SECRET,
   process.env.YOUTUBE_REDIRECT_URI
 );
-
+console.log('OAuth2 Client Configuration:');
+console.log('Client ID:', process.env.YOUTUBE_CLIENT_ID);
+console.log('Client Secret:', process.env.YOUTUBE_CLIENT_SECRET ? 'Configured (starts with: ' + process.env.YOUTUBE_CLIENT_SECRET.substring(0, 8) + '...)' : 'Missing');
+console.log('Redirect URI:', process.env.YOUTUBE_REDIRECT_URI);
 // YouTube API scope for managing subscriptions
 const SCOPES = [
   'https://www.googleapis.com/auth/youtube.force-ssl',
