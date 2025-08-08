@@ -4,6 +4,12 @@ const { google } = require('googleapis');
 const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
 
+// Log request details for debugging
+console.log('OAuth callback received:');
+console.log('Query params:', req.query);
+console.log('Session:', req.session);
+console.log('Headers:', req.headers); 
+
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(
   process.env.YOUTUBE_CLIENT_ID,
@@ -135,8 +141,35 @@ router.get('/youtube/callback', async (req, res) => {
   
   try {
     // Exchange code for tokens
-    const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
+try {
+  // Exchange code for tokens with detailed error handling
+  console.log('Attempting to exchange code for tokens...');
+  const tokenResponse = await oauth2Client.getToken(code).catch(err => {
+    console.error('Token exchange error details:', err);
+    throw new Error(`Token exchange failed: ${err.message}`);
+  });
+  
+  const { tokens } = tokenResponse;
+  console.log('Tokens received successfully');
+  
+  // Log token info (without exposing the actual tokens)
+  console.log('Token info:', {
+    hasAccessToken: !!tokens.access_token,
+    hasRefreshToken: !!tokens.refresh_token,
+    expiryDate: tokens.expiry_date
+  });
+  
+  oauth2Client.setCredentials(tokens);
+  
+  // Continue with the rest of your code...
+} catch (tokenError) {
+  console.error('Token exchange error:', tokenError);
+  return res.status(400).render('error', { 
+    message: `Authentication failed during token exchange: ${tokenError.message}`,
+    error: tokenError,
+    showNav: false
+  });
+}  
     
     // Get user info from YouTube
     const youtube = google.youtube({
@@ -191,7 +224,9 @@ router.get('/youtube/callback', async (req, res) => {
   } catch (error) {
     console.error('OAuth callback error:', error);
     res.status(500).render('error', { 
-      message: 'Failed to complete authentication' 
+      message: 'Failed to complete authentication' + error.message,
+    error: error,
+    showNav: false
     });
   }
 });
