@@ -99,6 +99,7 @@
                                                 data-status="<%= user.isAuthorized %>">
                                             <%= user.isAuthorized ? 'Revoke' : 'Authorize' %>
                                         </button>
+                                        <button class="btn btn-small btn-danger delete-user" data-id="<%= user.loginId %>">Delete</button>
                                     </td>
                                 </tr>
                             <% }); %>
@@ -362,6 +363,41 @@
                     .catch(error => {
                         console.error('Error:', error);
                         alert(`An error occurred while ${action === 'authorize' ? 'authorizing' : 'revoking'} the user`);
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    });
+                }
+            });
+        });
+        
+        // Delete user functionality
+        document.querySelectorAll('.delete-user').forEach(button => {
+            button.addEventListener('click', function() {
+                const loginId = this.getAttribute('data-id');
+                
+                if (confirm(`Are you sure you want to DELETE this user? This action cannot be undone.`)) {
+                    // Show loading state
+                    const originalText = this.textContent;
+                    this.textContent = 'Deleting...';
+                    this.disabled = true;
+                    
+                    fetch(`/admin/users/${loginId}/delete`, {
+                        method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Success: User deleted successfully`);
+                            location.reload();
+                        } else {
+                            alert(`Error: ${data.message}`);
+                            this.textContent = originalText;
+                            this.disabled = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(`An error occurred while deleting the user`);
                         this.textContent = originalText;
                         this.disabled = false;
                     });

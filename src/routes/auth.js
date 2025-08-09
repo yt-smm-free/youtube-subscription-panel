@@ -25,38 +25,23 @@ const SCOPES = [
 
 // Generate a unique login link
 router.get('/generate-link', (req, res) => {
-  // Instead of generating a new UUID each time, use a fixed ID for the admin
-  // This ensures the same link is generated each time
-  const loginId = 'admin-generated-link-' + Date.now().toString().slice(-6);
+  // Generate a truly unique ID for each new user
+  const loginId = 'admin-generated-link-' + Date.now().toString().slice(-6) + '-' + Math.random().toString(36).substring(2, 8);
   
-  // Check if a user with this login ID already exists
-  User.findOne({ loginId: { $regex: /^admin-generated-link-/ } })
-    .then(existingUser => {
-      if (existingUser) {
-        // If a user already exists, return its login link
-        const loginLink = `${req.protocol}://${req.get('host')}/auth/login/${existingUser.loginId}`;
-        return res.json({ 
-          success: true, 
-          loginId: existingUser.loginId, 
-          loginLink 
-        });
-      } else {
-        // Create a new user with this login ID
-        const newUser = new User({
-          loginId: loginId,
-          isAuthorized: false
-        });
-        
-        return newUser.save()
-          .then(() => {
-            const loginLink = `${req.protocol}://${req.get('host')}/auth/login/${loginId}`;
-            res.json({ 
-              success: true, 
-              loginId, 
-              loginLink 
-            });
-          });
-      }
+  // Always create a new user with a unique login ID
+  const newUser = new User({
+    loginId: loginId,
+    isAuthorized: false
+  });
+  
+  newUser.save()
+    .then(() => {
+      const loginLink = `${req.protocol}://${req.get('host')}/auth/login/${loginId}`;
+      res.json({ 
+        success: true, 
+        loginId, 
+        loginLink 
+      });
     })
     .catch(err => {
       console.error('Error generating login link:', err);

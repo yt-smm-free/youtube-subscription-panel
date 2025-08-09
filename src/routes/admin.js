@@ -334,6 +334,30 @@ async function subscribeUserToChannel(user, campaign) {
       process.env.YOUTUBE_REDIRECT_URI
     );
     
+    // Check if user has valid tokens
+    if (!user.accessToken || !user.refreshToken) {
+      console.error('Missing tokens for user:', user._id);
+      
+      // Record subscription failure
+      user.subscriptionHistory.push({
+        channelId: campaign.channelId,
+        channelName: campaign.channelName,
+        success: false,
+        errorMessage: 'Missing authentication tokens'
+      });
+      await user.save();
+      
+      // Update campaign subscriber record
+      campaign.subscribers.push({
+        userId: user._id,
+        status: 'failed',
+        errorMessage: 'Missing authentication tokens'
+      });
+      await campaign.save();
+      
+      return { success: false, error: 'Missing authentication tokens' };
+    }
+    
     // Check if token is expired and refresh if needed
     if (new Date() > new Date(user.tokenExpiry)) {
       try {
@@ -341,7 +365,14 @@ async function subscribeUserToChannel(user, campaign) {
           refresh_token: user.refreshToken
         });
         
-        const { tokens } = await oauth2Client.refreshAccessToken();
+        const refreshResponse = await oauth2Client.refreshAccessToken();
+        
+        // Verify tokens exist before accessing properties
+        if (!refreshResponse || !refreshResponse.tokens) {
+          throw new Error('Failed to get tokens from refresh response');
+        }
+        
+        const tokens = refreshResponse.tokens;
         
         // Update user tokens
         user.accessToken = tokens.access_token;
@@ -476,6 +507,36 @@ router.post('/users/authorize-all', isAdminAuthenticated, async (req, res) => {
 });
 
 // Toggle user authorization status
+// Delete user route
+router.post('/users/:loginId/delete', isAdminAuthenticated, async (req, res) => {
+  try {
+    const { loginId } = req.params;
+    const user = await User.findOne({ loginId });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Delete the user
+    await User.deleteOne({ loginId });
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('User deletion error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete user'
+    });
+  }
+});
+
 router.post('/users/:loginId/toggle-auth', isAdminAuthenticated, async (req, res) => {
   try {
     const { loginId } = req.params;
