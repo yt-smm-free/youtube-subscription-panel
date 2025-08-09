@@ -8,6 +8,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const expressLayouts = require('express-ejs-layouts'); // Added this line to require express-ejs-layouts
 
 // Load environment variables
 dotenv.config();
@@ -103,9 +104,11 @@ app.use(session({
   }
 }));
 
-// Set up EJS without layouts
+// Set up EJS with layouts
+app.use(expressLayouts); // Added this line to use express-ejs-layouts
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('layout', 'layout'); // Added this line to set the default layout
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
