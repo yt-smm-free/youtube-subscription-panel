@@ -209,7 +209,7 @@ try {
   await user.save();
   
   // Redirect to success page
-  res.render('auth-success', { showNav: false });
+  res.render('auth-success-fixed', { showNav: false });
   
 } catch (error) {
   console.error('OAuth callback error:', error);
