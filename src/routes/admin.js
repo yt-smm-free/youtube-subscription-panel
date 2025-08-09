@@ -119,7 +119,7 @@ router.get('/users', isAdminAuthenticated, async (req, res) => {
 router.get('/campaigns/new', isAdminAuthenticated, async (req, res) => {
   try {
     const authorizedUsers = await User.countDocuments({ isAuthorized: true });
-    res.render('admin/new-campaign-fixed', { authorizedUsers }); // Use the fixed template
+    res.render('admin/new-campaign', { authorizedUsers }); // Use the fixed template
   } catch (error) {
     console.error('New campaign page error:', error);
     res.status(500).render('error', { 
