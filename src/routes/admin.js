@@ -1,4 +1,3 @@
-const youtubeUtils = require('../utils/youtube');
 const express = require('express');
 const router = express.Router();
 const { google } = require('googleapis');
@@ -6,6 +5,7 @@ const Admin = require('../models/Admin');
 const User = require('../models/User');
 const Campaign = require('../models/Campaign');
 const bcrypt = require('bcryptjs');
+const youtubeUtils = require('../utils/youtube'); // Import the YouTube utilities
 
 // Middleware to check if admin is authenticated
 const isAdminAuthenticated = (req, res, next) => {
@@ -16,11 +16,9 @@ const isAdminAuthenticated = (req, res, next) => {
 };
 
 // Admin login page
-// Admin login page
 router.get('/login', (req, res) => {
   res.render('admin/login', { showNav: false });
 });
-
 
 // Admin login process
 router.post('/login', async (req, res) => {
@@ -121,7 +119,7 @@ router.get('/users', isAdminAuthenticated, async (req, res) => {
 router.get('/campaigns/new', isAdminAuthenticated, async (req, res) => {
   try {
     const authorizedUsers = await User.countDocuments({ isAuthorized: true });
-    res.render('admin/new-campaign', { authorizedUsers });
+    res.render('admin/new-campaign-fixed', { authorizedUsers }); // Use the fixed template
   } catch (error) {
     console.error('New campaign page error:', error);
     res.status(500).render('error', { 
@@ -135,30 +133,7 @@ router.post('/campaigns', isAdminAuthenticated, async (req, res) => {
   try {
     const { channelUrl, targetSubscribers } = req.body;
     
-    // Extract channel ID from URL
-// Use the extractChannelId function from youtube.js
-let channelId;
-try {
-  channelId = await youtubeUtils.extractChannelId(
-    channelUrl, 
-    authorizedUser.accessToken, 
-    authorizedUser.refreshToken
-  );
-} catch (error) {
-  console.error('Channel ID extraction error:', error);
-  return res.status(400).render('error', { 
-    message: `Failed to extract channel ID: ${error.message}` 
-  });
-}
-    
-    // Create OAuth client for API calls
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
-    );
-    
-    // Get an authorized user to fetch channel info
+    // Get an authorized user to fetch channel info - MOVED THIS BEFORE USING IT
     const authorizedUser = await User.findOne({ 
       isAuthorized: true,
       accessToken: { $exists: true }
@@ -169,6 +144,28 @@ try {
         message: 'No authorized users available to fetch channel info' 
       });
     }
+    
+    // Use the extractChannelId function from youtube.js
+    let channelId;
+    try {
+      channelId = await youtubeUtils.extractChannelId(
+        channelUrl, 
+        authorizedUser.accessToken, 
+        authorizedUser.refreshToken
+      );
+    } catch (error) {
+      console.error('Channel ID extraction error:', error);
+      return res.status(400).render('error', { 
+        message: `Failed to extract channel ID: ${error.message}` 
+      });
+    }
+    
+    // Create OAuth client for API calls
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.YOUTUBE_CLIENT_ID,
+      process.env.YOUTUBE_CLIENT_SECRET,
+      process.env.YOUTUBE_REDIRECT_URI
+    );
     
     // Set credentials
     oauth2Client.setCredentials({
@@ -444,7 +441,7 @@ async function subscribeUserToChannel(user, campaign) {
   }
 }
  
- router.post('/users/authorize-all', isAdminAuthenticated, async (req, res) => {
+router.post('/users/authorize-all', isAdminAuthenticated, async (req, res) => {
   try {
     // Find all unauthorized users
     const users = await User.find({ isAuthorized: false });
@@ -509,6 +506,7 @@ router.post('/users/:loginId/toggle-auth', isAdminAuthenticated, async (req, res
     });
   }
 });
+
 // Admin logout
 router.get('/logout', (req, res) => {
   req.session.destroy();
