@@ -34,6 +34,14 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isMasterLink: {
+    type: Boolean,
+    default: false
+  },
+  masterLinkId: {
+    type: String,
+    index: true
+  },
   lastLogin: {
     type: Date
   },
