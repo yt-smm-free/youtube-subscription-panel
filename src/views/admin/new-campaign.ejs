@@ -29,7 +29,7 @@
                     <div class="form-group">
                         <label for="channelUrl">YouTube Channel URL</label>
                         <input type="text" id="channelUrl" name="channelUrl" required 
-                               placeholder="https://www.youtube.com/channel/CHANNEL_ID">
+                               placeholder="https://www.youtube.com/channel/CHANNEL_ID or https://www.youtube.com/@username">
                         <p class="form-help">Enter the full URL of the YouTube channel</p>
                     </div>
                     
@@ -70,6 +70,7 @@
                 <h4>URL Format Examples:</h4>
                 <ul>
                     <li>https://www.youtube.com/channel/UC1234567890abcdefghij</li>
+                    <li>https://www.youtube.com/@username</li>
                 </ul>
             </div>
         </div>
@@ -80,14 +81,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         const channelUrlInput = document.getElementById('channelUrl');
         const targetSubscribersInput = document.getElementById('targetSubscribers');
-        const maxSubscribers = <%= authorizedUsers %>;
+        // const maxSubscribers = <%- JSON.stringify(authorizedUsers || 0) %>;
+        const maxSubscribers = <%= authorizedUsers %>; // Maximum target subscribers based on authorized users
         
         // Validate channel URL format
         channelUrlInput.addEventListener('blur', function() {
             const url = this.value.trim();
             
-            if (url && !url.includes('/channel/')) {
-                alert('Please use a channel URL in the format: https://www.youtube.com/channel/CHANNEL_ID');
+            if (url && !url.includes('/channel/') && !url.includes('youtube.com/@')) {
+                alert('Please use a valid YouTube channel URL format:\n- https://www.youtube.com/channel/CHANNEL_ID\n- https://www.youtube.com/@username');
             }
         });
         
@@ -105,9 +107,9 @@
         document.querySelector('.campaign-form').addEventListener('submit', function(e) {
             const url = channelUrlInput.value.trim();
             
-            if (!url.includes('/channel/')) {
+            if (!url.includes('/channel/') && !url.includes('youtube.com/@')) {
                 e.preventDefault();
-                alert('Please use a channel URL in the format: https://www.youtube.com/channel/CHANNEL_ID');
+                alert('Please use a valid YouTube channel URL format:\n- https://www.youtube.com/channel/CHANNEL_ID\n- https://www.youtube.com/@username');
             }
         });
     });

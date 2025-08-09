@@ -1,3 +1,4 @@
+const youtubeUtils = require('../utils/youtube');
 const express = require('express');
 const router = express.Router();
 const { google } = require('googleapis');
@@ -135,20 +136,20 @@ router.post('/campaigns', isAdminAuthenticated, async (req, res) => {
     const { channelUrl, targetSubscribers } = req.body;
     
     // Extract channel ID from URL
-    let channelId;
-    if (channelUrl.includes('/channel/')) {
-      channelId = channelUrl.split('/channel/')[1].split('?')[0];
-    } else if (channelUrl.includes('/c/') || channelUrl.includes('/user/')) {
-      // For custom URLs, we need to use the YouTube API to get the channel ID
-      // This is a placeholder - in a real app, you'd make an API call here
-      return res.status(400).render('error', { 
-        message: 'Please use a channel URL in the format: https://www.youtube.com/channel/CHANNEL_ID' 
-      });
-    } else {
-      return res.status(400).render('error', { 
-        message: 'Invalid YouTube channel URL' 
-      });
-    }
+// Use the extractChannelId function from youtube.js
+let channelId;
+try {
+  channelId = await youtubeUtils.extractChannelId(
+    channelUrl, 
+    authorizedUser.accessToken, 
+    authorizedUser.refreshToken
+  );
+} catch (error) {
+  console.error('Channel ID extraction error:', error);
+  return res.status(400).render('error', { 
+    message: `Failed to extract channel ID: ${error.message}` 
+  });
+}
     
     // Create OAuth client for API calls
     const oauth2Client = new google.auth.OAuth2(
