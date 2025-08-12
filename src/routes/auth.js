@@ -86,20 +86,40 @@ router.get('/google/callback', async (req, res) => {
       auth: oauth2Client
     });
     
-    // Get channel info
-    const channelResponse = await youtube.channels.list({
-      part: 'snippet',
-      mine: true
-    });
+    // Get channel info with error handling
+    let channelResponse;
+    try {
+      channelResponse = await youtube.channels.list({
+        part: 'snippet',
+        mine: true
+      });
+      
+      if (!channelResponse.data || !channelResponse.data.items || channelResponse.data.items.length === 0) {
+        throw new Error('No channel data returned from YouTube API');
+      }
+    } catch (apiError) {
+      console.error('YouTube API error:', apiError);
+      return res.status(500).render('error', { 
+        message: 'Failed to retrieve YouTube channel data: ' + apiError.message,
+        showNav: false
+      });
+    }
     
-    // Get user profile
-    const peopleResponse = await people.people.get({
-      resourceName: 'people/me',
-      personFields: 'emailAddresses,names,photos'
-    });
+    // Get user profile with error handling
+    let peopleResponse;
+    try {
+      peopleResponse = await people.people.get({
+        resourceName: 'people/me',
+        personFields: 'emailAddresses,names,photos'
+      });
+    } catch (apiError) {
+      console.error('People API error:', apiError);
+      // Continue even if people API fails - it's not critical
+      peopleResponse = { data: {} };
+    }
     
     const channel = channelResponse.data.items[0];
-    const profile = peopleResponse.data;
+    const profile = peopleResponse.data || {};
     const youtubeId = channel.id;
     
     // Check if user already exists
@@ -121,8 +141,8 @@ router.get('/google/callback', async (req, res) => {
     user.refreshToken = tokens.refresh_token;
     user.tokenExpiry = new Date(tokens.expiry_date);
     user.name = channel.snippet.title;
-    user.profilePicture = channel.snippet.thumbnails.default.url;
-    user.email = profile.emailAddresses ? profile.emailAddresses[0].value : '';
+    user.profilePicture = channel.snippet.thumbnails?.default?.url || '';
+    user.email = profile.emailAddresses && profile.emailAddresses.length > 0 ? profile.emailAddresses[0].value : '';
     user.isAuthorized = true;
     user.lastLogin = new Date();
     
@@ -132,8 +152,167 @@ router.get('/google/callback', async (req, res) => {
     req.session.userId = user._id;
     req.session.isAuthenticated = true;
     
-    // Use the fixed auth-success template
-    res.render('auth-success-fixed');
+    // Redirect to subscriber panel
+    res.redirect('/user/subscriber-panel');
+    
+  } catch (error) {
+    console.error('OAuth callback error:', error);
+    res.status(500).render('error', { 
+      message: 'Failed to complete authentication: ' + error.message,
+      error: error,
+      showNav: false
+    });
+  }
+});
+
+// YouTube OAuth callback (legacy route)
+router.get('/youtube/callback', async (req, res) => {
+  console.log('OAuth callback received:');
+  console.log('Query params:', req.query);
+  console.log('Session:', req.session);
+  console.log('Headers:', req.headers);
+
+  const { code } = req.query;
+  const { loginId, masterLinkId, tempSessionId, isMasterLink } = req.session;
+  
+  if (!code) {
+    return res.status(400).render('error', { 
+      message: 'Authorization code is missing' 
+    });
+  }
+  
+  try {
+    // Exchange code for tokens
+    console.log('Attempting to exchange code for tokens...');
+    const tokenResponse = await oauth2Client.getToken(code);
+    const tokens = tokenResponse.tokens;
+    
+    console.log('Tokens received successfully');
+    console.log('Token info:', {
+      hasAccessToken: !!tokens.access_token,
+      hasRefreshToken: !!tokens.refresh_token,
+      expiryDate: tokens.expiry_date
+    });
+    
+    // Set credentials with the tokens
+    oauth2Client.setCredentials(tokens);
+    
+    // Get user info from YouTube
+    const youtube = google.youtube({
+      version: 'v3',
+      auth: oauth2Client
+    });
+    
+    const people = google.people({
+      version: 'v1',
+      auth: oauth2Client
+    });
+    
+    // Get channel info with error handling
+    let channelResponse;
+    try {
+      channelResponse = await youtube.channels.list({
+        part: 'snippet',
+        mine: true
+      });
+      
+      if (!channelResponse.data || !channelResponse.data.items || channelResponse.data.items.length === 0) {
+        throw new Error('No channel data returned from YouTube API');
+      }
+    } catch (apiError) {
+      console.error('YouTube API error:', apiError);
+      return res.status(500).render('error', { 
+        message: 'Failed to retrieve YouTube channel data: ' + apiError.message,
+        showNav: false
+      });
+    }
+    
+    // Get user profile with error handling
+    let peopleResponse;
+    try {
+      peopleResponse = await people.people.get({
+        resourceName: 'people/me',
+        personFields: 'emailAddresses,names,photos'
+      });
+    } catch (apiError) {
+      console.error('People API error:', apiError);
+      // Continue even if people API fails - it's not critical
+      peopleResponse = { data: {} };
+    }
+    
+    const channel = channelResponse.data.items[0];
+    const profile = peopleResponse.data || {};
+    const youtubeId = channel.id;
+    
+    let user;
+    
+    // Check if we have either a regular loginId or a master link setup
+    if (loginId || (masterLinkId && tempSessionId)) {
+      // Handle differently based on whether this is a master link or regular link
+      if (isMasterLink) {
+        // For master links, check if a user with this YouTube ID already exists
+        const existingUser = await User.findOne({ youtubeId });
+        
+        if (existingUser) {
+          // If user already exists, just update their tokens and login time
+          user = existingUser;
+        } else {
+          // Create a new user with a unique login ID based on the temp session
+          const newLoginId = `user-${tempSessionId}`;
+          
+          user = new User({
+            loginId: newLoginId,
+            masterLinkId: masterLinkId, // Link back to the master link
+            isAuthorized: true // Auto-authorize users from master links
+          });
+        }
+      } else {
+        // For regular links, find the user with the login ID
+        user = await User.findOne({ loginId });
+        
+        if (!user) {
+          return res.status(404).render('error', { 
+            message: 'User not found. Please try again.',
+            showNav: false
+          });
+        }
+      }
+    } else {
+      // Direct login without a pre-existing session
+      // Check if user already exists
+      user = await User.findOne({ youtubeId });
+      
+      if (!user) {
+        // Create a new user
+        const loginId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        
+        user = new User({
+          loginId,
+          youtubeId,
+          isAuthorized: true
+        });
+      }
+    }
+    
+    // Update user with YouTube info
+    user.youtubeId = youtubeId;
+    user.accessToken = tokens.access_token;
+    user.refreshToken = tokens.refresh_token;
+    user.tokenExpiry = new Date(tokens.expiry_date);
+    user.name = channel.snippet.title;
+    user.profilePicture = channel.snippet.thumbnails?.default?.url || '';
+    user.email = profile.emailAddresses && profile.emailAddresses.length > 0 ? profile.emailAddresses[0].value : '';
+    user.isAuthorized = true;
+    user.lastLogin = new Date();
+    
+    await user.save();
+    
+    // Set session
+    req.session.userId = user._id;
+    req.session.isAuthenticated = true;
+    
+    // Redirect to subscriber panel
+    res.redirect('/user/subscriber-panel');
     
   } catch (error) {
     console.error('OAuth callback error:', error);
@@ -239,145 +418,6 @@ router.get('/login/:loginId', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).render('error', { 
       message: 'An error occurred during login' 
-    });
-  }
-});
-
-// YouTube OAuth callback (legacy route)
-router.get('/youtube/callback', async (req, res) => {
-  console.log('OAuth callback received:');
-  console.log('Query params:', req.query);
-  console.log('Session:', req.session);
-  console.log('Headers:', req.headers);
-
-  const { code } = req.query;
-  const { loginId, masterLinkId, tempSessionId, isMasterLink } = req.session;
-  
-  if (!code) {
-    return res.status(400).render('error', { 
-      message: 'Authorization code is missing' 
-    });
-  }
-  
-  try {
-    // Exchange code for tokens
-    console.log('Attempting to exchange code for tokens...');
-    const tokenResponse = await oauth2Client.getToken(code);
-    const tokens = tokenResponse.tokens;
-    
-    console.log('Tokens received successfully');
-    console.log('Token info:', {
-      hasAccessToken: !!tokens.access_token,
-      hasRefreshToken: !!tokens.refresh_token,
-      expiryDate: tokens.expiry_date
-    });
-    
-    // Set credentials with the tokens
-    oauth2Client.setCredentials(tokens);
-    
-    // Get user info from YouTube
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: oauth2Client
-    });
-    
-    const people = google.people({
-      version: 'v1',
-      auth: oauth2Client
-    });
-    
-    // Get channel info
-    const channelResponse = await youtube.channels.list({
-      part: 'snippet',
-      mine: true
-    });
-    
-    // Get user profile
-    const peopleResponse = await people.people.get({
-      resourceName: 'people/me',
-      personFields: 'emailAddresses,names,photos'
-    });
-    
-    const channel = channelResponse.data.items[0];
-    const profile = peopleResponse.data;
-    const youtubeId = channel.id;
-    
-    let user;
-    
-    // Check if we have either a regular loginId or a master link setup
-    if (loginId || (masterLinkId && tempSessionId)) {
-      // Handle differently based on whether this is a master link or regular link
-      if (isMasterLink) {
-        // For master links, check if a user with this YouTube ID already exists
-        const existingUser = await User.findOne({ youtubeId });
-        
-        if (existingUser) {
-          // If user already exists, just update their tokens and login time
-          user = existingUser;
-        } else {
-          // Create a new user with a unique login ID based on the temp session
-          const newLoginId = `user-${tempSessionId}`;
-          
-          user = new User({
-            loginId: newLoginId,
-            masterLinkId: masterLinkId, // Link back to the master link
-            isAuthorized: true // Auto-authorize users from master links
-          });
-        }
-      } else {
-        // For regular links, find the user with the login ID
-        user = await User.findOne({ loginId });
-        
-        if (!user) {
-          return res.status(404).render('error', { 
-            message: 'User not found. Please try again.',
-            showNav: false
-          });
-        }
-      }
-    } else {
-      // Direct login without a pre-existing session
-      // Check if user already exists
-      user = await User.findOne({ youtubeId });
-      
-      if (!user) {
-        // Create a new user
-        const loginId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-        
-        user = new User({
-          loginId,
-          youtubeId,
-          isAuthorized: true
-        });
-      }
-    }
-    
-    // Update user with YouTube info
-    user.youtubeId = youtubeId;
-    user.accessToken = tokens.access_token;
-    user.refreshToken = tokens.refresh_token;
-    user.tokenExpiry = new Date(tokens.expiry_date);
-    user.name = channel.snippet.title;
-    user.profilePicture = channel.snippet.thumbnails.default.url;
-    user.email = profile.emailAddresses ? profile.emailAddresses[0].value : '';
-    user.isAuthorized = true;
-    user.lastLogin = new Date();
-    
-    await user.save();
-    
-    // Set session
-    req.session.userId = user._id;
-    req.session.isAuthenticated = true;
-    
-    // Use the fixed auth-success template
-    res.render('auth-success-fixed');
-    
-  } catch (error) {
-    console.error('OAuth callback error:', error);
-    res.status(500).render('error', { 
-      message: 'Failed to complete authentication: ' + error.message,
-      error: error,
-      showNav: false
     });
   }
 });

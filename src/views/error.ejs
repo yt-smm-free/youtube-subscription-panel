@@ -1,12 +1,13 @@
-<%- include('layout', { showNav: false }) %>
+<% layout('layout') %>
+<% locals.showNav = false %>
 
-<div class="auth-container">
-    <div class="auth-box error">
-        <div class="auth-header">
-            <h2 class="glitch-text error-text">Error Occurred</h2>
+<div class="error-container">
+    <div class="error-box">
+        <div class="error-header">
+            <h2 class="glitch-text">ERROR OCCURRED</h2>
         </div>
         
-        <div class="auth-content">
+        <div class="error-content">
             <div class="error-icon">
                 <svg viewBox="0 0 24 24" width="64" height="64">
                     <path fill="#ff0000" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
@@ -21,30 +22,25 @@
                     <span class="terminal-title">system_error</span>
                 </div>
                 <div class="terminal-body">
-                    <div class="line">$ <span class="command">checking_system_status</span></div>
-                    <div class="line">$ <span class="response error-text">Error detected...</span></div>
-                    <div class="line">$ <span class="command">error_details</span></div>
-                    <div class="line">$ <span class="response error-text"><%= message %></span></div>
-                    <div class="line">$ <span class="command">suggested_action</span></div>
-                    <div class="line">$ <span class="response">Please try again or contact support.</span></div>
-                    <div class="line">$ <span class="cursor"></span></div>
+                    <div class="line">$<span class="command">checking_system_status</span></div>
+                    <div class="line">$<span class="response error-text">Error detected...</span></div>
+                    <div class="line">$<span class="command">error_details</span></div>
+                    <div class="line">$<span class="response error-text"><%= message %></span></div>
+                    <div class="line">$<span class="command">suggested_action</span></div>
+                    <% if (typeof error !== 'undefined' && error.stack && process.env.NODE_ENV !== 'production') { %>
+                        <div class="line">$<span class="response"><pre><%= error.stack %></pre></span></div>
+                    <% } %>
+                    <div class="line">$<span class="cursor"></span></div>
                 </div>
             </div>
             
-            <p class="auth-message error-message">
+            <p class="error-message">
                 <%= message %>
             </p>
             
-            <div class="auth-actions">
-                <a href="/" class="btn btn-secondary">Return to Home</a>
+            <div class="error-actions">
+                <a href="/" class="btn btn-primary">RETURN TO HOME</a>
             </div>
-            
-            <% if (typeof error !== 'undefined' && Object.keys(error).length > 0) { %>
-                <div class="error-details">
-                    <h4>Error Details:</h4>
-                    <pre><%= JSON.stringify(error, null, 2) %></pre>
-                </div>
-            <% } %>
         </div>
     </div>
 </div>
