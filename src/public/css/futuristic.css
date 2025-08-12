@@ -2117,9 +2117,9 @@ tr:hover .channel-thumbnail {
 }
 
 /* Pulse Animation for Elements */
-.pulse {
+/* .pulse {
   animation: pulse 2s infinite;
-}
+} */
 
 @keyframes pulse {
   0% {

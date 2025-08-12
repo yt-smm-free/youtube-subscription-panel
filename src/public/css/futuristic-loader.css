@@ -80,7 +80,7 @@
 }
 
 /* Pulsing Circle */
-.futuristic-loader .pulse {
+/* .futuristic-loader .pulse {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -88,8 +88,8 @@
   width: 40px;
   height: 40px;
   background-color: var(--primary-color);
-  border-radius: 50%;
-  animation: pulse 1.5s ease-in-out infinite;
+  border-radius: 50%;} */
+  /* animation: pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
@@ -108,7 +108,7 @@
     opacity: 1;
     box-shadow: 0 0 0 0 rgba(0, 229, 255, 0);
   }
-}
+} */
 
 /* Loading Text */
 .futuristic-loader .text {

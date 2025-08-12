@@ -29,9 +29,9 @@
 }
 
 /* Icon Animations */
-.icon-pulse {
+/* .icon-pulse {
   animation: iconPulse 2s infinite;
-}
+} */
 
 @keyframes iconPulse {
   0% {
