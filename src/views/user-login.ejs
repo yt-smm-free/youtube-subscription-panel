@@ -1,5 +1,4 @@
-<% layout('layout') %>
-<% locals.showNav = false %>
+<%- include('layout', { showNav: false }) %>
 
 <div class="auth-container">
     <div class="auth-box">
@@ -7,7 +6,7 @@
             <h2 class="glitch-text">YouTube Subscriber Panel</h2>
         </div>
         
-        <!-- <div class="auth-content">
+        <div class="auth-content">
             <div class="terminal-mini">
                 <div class="terminal-header">
                     <span class="terminal-button red"></span>
@@ -22,7 +21,7 @@
                     <div class="line">$ <span class="response">Authorization required. Please connect your Google account.</span></div>
                     <div class="line">$ <span class="cursor"></span></div>
                 </div>
-            </div> -->
+            </div>
             
             <div class="auth-actions">
                 <a href="/auth/google/login" class="btn btn-primary">
