@@ -4,8 +4,8 @@
     <div class="campaigns-header">
         <h2 class="glitch-text">Campaigns</h2>
         <div class="campaigns-actions">
-            <a href="/admin/campaigns/new" class="btn btn-primary">New Campaign</a>
-            <a href="/admin/dashboard" class="btn btn-secondary">Back to Dashboard</a>
+            <a href="/abc/xxx/campaigns/new" class="btn btn-primary">New Campaign</a>
+            <a href="/abc/xxx/dashboard" class="btn btn-secondary">Back to Dashboard</a>
         </div>
     </div>
     
@@ -63,7 +63,7 @@
                                     <td><%= new Date(campaign.createdAt).toLocaleDateString() %></td>
                                     <td><%= campaign.completedAt ? new Date(campaign.completedAt).toLocaleDateString() : '-' %></td>
                                     <td>
-                                        <a href="/admin/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
+                                        <a href="/abc/xxx/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
                                         <% if (campaign.status === 'pending') { %>
                                             <button class="btn btn-small btn-primary execute-campaign" data-id="<%= campaign._id %>">Execute</button>
                                         <% } %>
@@ -99,7 +99,7 @@
                     this.disabled = true;
                     this.textContent = 'Processing...';
                     
-                    fetch(`/admin/campaigns/${campaignId}/execute`, {
+                    fetch(`/abc/xxx/campaigns/${campaignId}/execute`, {
                         method: 'POST'
                     })
                         .then(response => response.json())

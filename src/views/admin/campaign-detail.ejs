@@ -4,7 +4,7 @@
     <div class="campaign-detail-header">
         <h2 class="glitch-text">Campaign Details</h2>
         <div class="campaign-detail-actions">
-            <a href="/admin/campaigns" class="btn btn-secondary">Back to Campaigns</a>
+            <a href="/abc/xxx/campaigns" class="btn btn-secondary">Back to Campaigns</a>
             <% if (campaign.status === 'pending') { %>
                 <button id="execute-campaign" class="btn btn-primary" data-id="<%= campaign._id %>">Execute Campaign</button>
             <% } %>
@@ -194,7 +194,7 @@
                     this.disabled = true;
                     this.textContent = 'Processing...';
                     
-                    fetch(`/admin/campaigns/${campaignId}/execute`, {
+                    fetch(`/abc/xxx/campaigns/${campaignId}/execute`, {
                         method: 'POST'
                     })
                         .then(response => response.json())
