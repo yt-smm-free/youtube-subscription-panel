@@ -2,6 +2,72 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 
+// Middleware to check if user is authenticated
+const isAuthenticated = (req, res, next) => {
+  if (req.session.isAuthenticated && req.session.userId) {
+    return next();
+  }
+  res.redirect('/');
+};
+
+// Subscriber panel route
+router.get('/subscriber-panel', isAuthenticated, async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId);
+    
+    if (!user) {
+      req.session.destroy();
+      return res.redirect('/');
+    }
+    
+    res.render('subscriber-panel', { 
+      user,
+      showNav: false
+    });
+  } catch (error) {
+    console.error('Error loading subscriber panel:', error);
+    res.status(500).render('error', { 
+      message: 'Failed to load subscriber panel',
+      showNav: false
+    });
+  }
+});
+
+// Process subscriber request (fake endpoint)
+router.post('/process-subscribers', isAuthenticated, async (req, res) => {
+  try {
+    const { channelUrl, subscriberCount } = req.body;
+    
+    // Validate input
+    if (!channelUrl || !subscriberCount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Channel URL and subscriber count are required'
+      });
+    }
+    
+    // Always return success with queued status
+    setTimeout(() => {
+      res.json({
+        success: true,
+        status: 'queued',
+        message: 'Your order has been queued and will be completed within 3 to 5 days.',
+        channelUrl,
+        subscriberCount
+      });
+    }, 5000); // Add a delay to simulate processing
+    
+  } catch (error) {
+    console.error('Error processing subscriber request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred while processing your request'
+    });
+  }
+});
+
+// Legacy routes for backward compatibility
+
 // Get user profile by login ID
 router.get('/profile/:loginId', async (req, res) => {
   try {

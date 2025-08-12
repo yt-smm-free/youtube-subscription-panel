@@ -115,13 +115,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/auth', authRoutes);
-app.use('/admin', adminRoutes);
+app.use('/abc/xxx', adminRoutes); // Changed admin route to /abc/xxx
 app.use('/user', userRoutes);
 
-// Home route
+// Home route - now redirects to user login
 app.get('/', (req, res) => {
-  res.render('index', { showNav: true });
+  // If user is already logged in, redirect to subscriber panel
+  if (req.session.userId) {
+    return res.redirect('/user/subscriber-panel');
+  }
+  // Otherwise show the user login page
+  res.render('user-login', { showNav: true });
 });
+
 app.get('/debug-auth', (req, res) => {
   res.json({
     session: req.session,
@@ -130,6 +136,7 @@ app.get('/debug-auth', (req, res) => {
     headers: req.headers
   });
 });
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);

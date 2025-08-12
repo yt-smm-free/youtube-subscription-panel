@@ -1,0 +1,292 @@
+<%- include('layout', { showNav: false }) %>
+
+<div class="subscriber-panel-container">
+    <div class="subscriber-panel-header">
+        <h1 class="glitch-text">YouTube Subscriber Panel</h1>
+        <div class="user-info">
+            <% if (user.profilePicture) { %>
+                <img src="<%= user.profilePicture %>" alt="Profile" class="profile-pic">
+            <% } %>
+            <span>Welcome, <%= user.name || 'User' %></span>
+            <a href="/auth/logout" class="btn btn-sm btn-danger">Logout</a>
+        </div>
+    </div>
+
+    <div class="subscriber-panel-content">
+        <div class="terminal-panel">
+            <div class="terminal-header">
+                <span class="terminal-button red"></span>
+                <span class="terminal-button yellow"></span>
+                <span class="terminal-button green"></span>
+                <span class="terminal-title">subscriber_boost</span>
+            </div>
+            <div class="terminal-body" id="terminal-output">
+                <div class="line">$ <span class="command">initializing_subscriber_system</span></div>
+                <div class="line">$ <span class="response">System initialized...</span></div>
+                <div class="line">$ <span class="command">checking_youtube_api</span></div>
+                <div class="line">$ <span class="response">YouTube API connected...</span></div>
+                <div class="line">$ <span class="command">ready_for_boost</span></div>
+                <div class="line">$ <span class="response">Enter channel URL and subscriber count below to start boosting.</span></div>
+                <div class="line">$ <span class="cursor"></span></div>
+            </div>
+        </div>
+
+        <div class="subscriber-form-container">
+            <h3>Boost Your YouTube Channel</h3>
+            <p>Enter your channel URL and the number of subscribers you want to gain (10-5000).</p>
+            
+            <form id="subscriber-form" class="subscriber-form">
+                <div class="form-group">
+                    <label for="channel-url">YouTube Channel URL</label>
+                    <input type="text" id="channel-url" name="channelUrl" placeholder="https://www.youtube.com/channel/..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subscriber-count">Number of Subscribers (10-5000)</label>
+                    <input type="number" id="subscriber-count" name="subscriberCount" min="10" max="5000" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="boost-button" class="btn btn-primary">Start Boosting</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="process-container" id="process-container" style="display: none;">
+            <h3>Processing Your Request</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="process-status" id="process-status">Initializing...</div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .subscriber-panel-container {
+        max-width: 900px;
+        margin: 20px auto;
+        background: rgba(10, 15, 20, 0.8);
+        border: 1px solid #30cfd0;
+        border-radius: 5px;
+        box-shadow: 0 0 15px rgba(48, 207, 208, 0.5);
+        overflow: hidden;
+    }
+
+    .subscriber-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: rgba(5, 10, 15, 0.9);
+        border-bottom: 1px solid #30cfd0;
+    }
+
+    .subscriber-panel-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #30cfd0;
+    }
+
+    .subscriber-panel-content {
+        padding: 20px;
+    }
+
+    .terminal-panel {
+        margin-bottom: 20px;
+        border: 1px solid #30cfd0;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .subscriber-form-container {
+        background: rgba(15, 20, 25, 0.7);
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #30cfd0;
+        margin-bottom: 20px;
+    }
+
+    .subscriber-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        color: #30cfd0;
+    }
+
+    .form-group input {
+        padding: 10px;
+        border: 1px solid #30cfd0;
+        background: rgba(5, 10, 15, 0.8);
+        color: #fff;
+        border-radius: 3px;
+    }
+
+    .form-actions {
+        margin-top: 10px;
+    }
+
+    .process-container {
+        background: rgba(15, 20, 25, 0.7);
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #30cfd0;
+    }
+
+    .progress-bar {
+        height: 20px;
+        background: rgba(5, 10, 15, 0.8);
+        border: 1px solid #30cfd0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 15px 0;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #30cfd0, #330867);
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+
+    .process-status {
+        text-align: center;
+        color: #30cfd0;
+        font-family: 'Share Tech Mono', monospace;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Terminal cursor animation
+        const cursor = document.querySelector('.cursor');
+        setInterval(() => {
+            cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+        }, 500);
+
+        // Subscriber form handling
+        const subscriberForm = document.getElementById('subscriber-form');
+        const processContainer = document.getElementById('process-container');
+        const progressFill = document.getElementById('progress-fill');
+        const processStatus = document.getElementById('process-status');
+        const terminalOutput = document.getElementById('terminal-output');
+
+        subscriberForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const channelUrl = document.getElementById('channel-url').value;
+            const subscriberCount = document.getElementById('subscriber-count').value;
+            
+            // Hide form and show process
+            subscriberForm.style.display = 'none';
+            processContainer.style.display = 'block';
+            
+            // Add terminal output
+            addTerminalLine('command', `boost_channel ${channelUrl} ${subscriberCount}`);
+            addTerminalLine('response', 'Starting subscriber boost process...');
+            
+            // Simulate processing
+            let progress = 0;
+            const statuses = [
+                'Initializing boost system...',
+                'Connecting to YouTube API...',
+                'Validating channel URL...',
+                'Channel verified!',
+                'Preparing subscriber network...',
+                'Allocating resources...',
+                'Connecting to subscriber pools...',
+                'Optimizing delivery sequence...',
+                'Preparing delivery schedule...',
+                'Setting up subscriber profiles...',
+                'Configuring geo-targeting...',
+                'Analyzing channel metrics...',
+                'Optimizing for algorithm...',
+                'Preparing engagement patterns...',
+                'Configuring retention strategies...',
+                'Setting up boost sequence...',
+                'Finalizing delivery plan...',
+                'Initiating first subscriber wave...',
+                'Processing subscriber batch #1...',
+                'Processing subscriber batch #2...',
+                'Processing subscriber batch #3...',
+                'Verifying subscriber quality...',
+                'Optimizing delivery speed...',
+                'Adjusting for YouTube algorithm...',
+                'Implementing retention safeguards...',
+                'Processing large subscriber batch...',
+                'Verifying subscriber authenticity...',
+                'Implementing engagement protocols...',
+                'Finalizing subscriber delivery...',
+                'Queuing remaining subscribers...'
+            ];
+            
+            let statusIndex = 0;
+            
+            // Update progress and status
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 3;
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(progressInterval);
+                    
+                    // Show final message after completion
+                    setTimeout(() => {
+                        processStatus.innerHTML = '<span style="color: #ff9900;">⚠️ Your order has been queued and will be completed within 3 to 5 days.</span>';
+                        addTerminalLine('command', 'check_status');
+                        addTerminalLine('response', 'Order queued. Will be completed within 3-5 days.');
+                    }, 2000);
+                }
+                
+                // Update progress bar
+                progressFill.style.width = `${progress}%`;
+                
+                // Update status message occasionally
+                if (Math.random() > 0.7 && statusIndex < statuses.length) {
+                    processStatus.textContent = statuses[statusIndex];
+                    addTerminalLine('command', 'status_update');
+                    addTerminalLine('response', statuses[statusIndex]);
+                    statusIndex++;
+                }
+            }, 800);
+        });
+        
+        // Function to add lines to the terminal
+        function addTerminalLine(type, text) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            
+            if (type === 'command') {
+                line.innerHTML = `$ <span class="command">${text}</span>`;
+            } else {
+                line.innerHTML = `$ <span class="response">${text}</span>`;
+            }
+            
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+    });
+</script>

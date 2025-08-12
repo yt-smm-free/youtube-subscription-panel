@@ -1,0 +1,291 @@
+<div class="user-detail-container">
+    <div class="user-profile">
+        <div class="user-profile-header">
+            <% if (user.profilePicture) { %>
+                <img src="<%= user.profilePicture %>" alt="Profile" class="user-profile-image">
+            <% } else { %>
+                <div class="user-profile-image-placeholder"></div>
+            <% } %>
+            <div class="user-profile-info">
+                <h3><%= user.name || 'Unknown User' %></h3>
+                <p class="user-email"><%= user.email || 'No email provided' %></p>
+                <div class="user-status">
+                    <% if (user.isAuthorized) { %>
+                        <span class="status-badge authorized">Authorized</span>
+                    <% } else { %>
+                        <span class="status-badge unauthorized">Unauthorized</span>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
+        <div class="user-profile-details">
+            <div class="detail-group">
+                <h4>Account Information</h4>
+                <div class="detail-item">
+                    <span class="detail-label">User ID:</span>
+                    <span class="detail-value"><%= user._id %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Login ID:</span>
+                    <span class="detail-value"><%= user.loginId %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">YouTube ID:</span>
+                    <span class="detail-value"><%= user.youtubeId || 'Not connected' %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Created:</span>
+                    <span class="detail-value"><%= new Date(user.createdAt).toLocaleString() %></span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Last Login:</span>
+                    <span class="detail-value"><%= user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never' %></span>
+                </div>
+            </div>
+            
+            <% if (user.subscriptionHistory && user.subscriptionHistory.length > 0) { %>
+                <div class="detail-group">
+                    <h4>Subscription History</h4>
+                    <div class="subscription-history">
+                        <table class="subscription-table">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% user.subscriptionHistory.forEach(sub => { %>
+                                    <tr>
+                                        <td><%= sub.channelName || sub.channelId %></td>
+                                        <td><%= new Date(sub.subscribedAt).toLocaleString() %></td>
+                                        <td>
+                                            <% if (sub.success) { %>
+                                                <span class="status-badge authorized">Success</span>
+                                            <% } else { %>
+                                                <span class="status-badge unauthorized">Failed</span>
+                                                <% if (sub.errorMessage) { %>
+                                                    <span class="error-message"><%= sub.errorMessage %></span>
+                                                <% } %>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <% } %>
+            
+            <div class="detail-group">
+                <h4>Actions</h4>
+                <div class="user-detail-actions">
+                    <% if (user.isAuthorized) { %>
+                        <button class="btn btn-danger revoke-auth-detail" data-user-id="<%= user._id %>">Revoke Authorization</button>
+                    <% } else { %>
+                        <button class="btn btn-success authorize-user-detail" data-user-id="<%= user._id %>">Authorize User</button>
+                    <% } %>
+                    <button class="btn btn-danger delete-user" data-user-id="<%= user._id %>">Delete User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .user-detail-container {
+        padding: 0;
+    }
+    
+    .user-profile {
+        background: rgba(10, 15, 20, 0.8);
+    }
+    
+    .user-profile-header {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid rgba(48, 207, 208, 0.3);
+    }
+    
+    .user-profile-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px solid #30cfd0;
+        object-fit: cover;
+    }
+    
+    .user-profile-image-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #30cfd0;
+    }
+    
+    .user-profile-info {
+        margin-left: 20px;
+    }
+    
+    .user-profile-info h3 {
+        margin: 0 0 5px;
+        font-size: 1.5rem;
+    }
+    
+    .user-email {
+        margin: 0 0 10px;
+        color: #aaa;
+    }
+    
+    .user-profile-details {
+        padding: 20px;
+    }
+    
+    .detail-group {
+        margin-bottom: 25px;
+    }
+    
+    .detail-group h4 {
+        margin: 0 0 15px;
+        color: #30cfd0;
+        border-bottom: 1px solid rgba(48, 207, 208, 0.3);
+        padding-bottom: 5px;
+    }
+    
+    .detail-item {
+        display: flex;
+        margin-bottom: 10px;
+    }
+    
+    .detail-label {
+        width: 120px;
+        font-weight: bold;
+        color: #aaa;
+    }
+    
+    .detail-value {
+        flex: 1;
+    }
+    
+    .subscription-history {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .subscription-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .subscription-table th,
+    .subscription-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid rgba(48, 207, 208, 0.2);
+    }
+    
+    .subscription-table th {
+        color: #30cfd0;
+    }
+    
+    .error-message {
+        display: block;
+        font-size: 0.8rem;
+        color: #ff5555;
+        margin-top: 3px;
+    }
+    
+    .user-detail-actions {
+        display: flex;
+        gap: 10px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Authorize user
+        const authorizeButton = document.querySelector('.authorize-user-detail');
+        if (authorizeButton) {
+            authorizeButton.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                
+                fetch(`/abc/xxx/users/${userId}/authorize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the modal content
+                        location.reload();
+                    } else {
+                        alert('Failed to authorize user: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred: ' + error.message);
+                });
+            });
+        }
+        
+        // Revoke authorization
+        const revokeButton = document.querySelector('.revoke-auth-detail');
+        if (revokeButton) {
+            revokeButton.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+                
+                fetch(`/abc/xxx/users/${userId}/revoke`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the modal content
+                        location.reload();
+                    } else {
+                        alert('Failed to revoke authorization: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('An error occurred: ' + error.message);
+                });
+            });
+        }
+        
+        // Delete user
+        const deleteButton = document.querySelector('.delete-user');
+        if (deleteButton) {
+            deleteButton.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                    const userId = this.getAttribute('data-user-id');
+                    
+                    fetch(`/abc/xxx/users/${userId}/delete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Close modal and reload page
+                            window.parent.location.reload();
+                        } else {
+                            alert('Failed to delete user: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('An error occurred: ' + error.message);
+                    });
+                }
+            });
+        }
+    });
+</script>

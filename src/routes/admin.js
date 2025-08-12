@@ -12,7 +12,7 @@ const isAdminAuthenticated = (req, res, next) => {
   if (req.session.isAdminAuthenticated) {
     return next();
   }
-  res.redirect('/admin/login');
+  res.redirect('/abc/xxx/login');
 };
 
 // Admin login page
@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
       admin.lastLogin = new Date();
       await admin.save();
       
-      return res.redirect('/admin/dashboard');
+      return res.redirect('/abc/xxx/dashboard');
     }
     
     // If admin exists, check password
@@ -64,19 +64,21 @@ router.post('/login', async (req, res) => {
         admin.lastLogin = new Date();
         await admin.save();
         
-        return res.redirect('/admin/dashboard');
+        return res.redirect('/abc/xxx/dashboard');
       }
     }
     
     // Invalid credentials
     res.render('admin/login', { 
-      error: 'Invalid username or password' 
+      error: 'Invalid username or password',
+      showNav: false
     });
     
   } catch (error) {
     console.error('Admin login error:', error);
     res.status(500).render('error', { 
-      message: 'An error occurred during login' 
+      message: 'An error occurred during login',
+      showNav: false
     });
   }
 });
@@ -92,12 +94,14 @@ router.get('/dashboard', isAdminAuthenticated, async (req, res) => {
     res.render('admin/dashboard', {
       totalUsers,
       authorizedUsers,
-      campaigns
+      campaigns,
+      showNav: true
     });
   } catch (error) {
     console.error('Dashboard error:', error);
     res.status(500).render('error', { 
-      message: 'Failed to load dashboard' 
+      message: 'Failed to load dashboard',
+      showNav: false
     });
   }
 });
@@ -105,473 +109,117 @@ router.get('/dashboard', isAdminAuthenticated, async (req, res) => {
 // List all users
 router.get('/users', isAdminAuthenticated, async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.render('admin/users', { users });
+    // Get pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    
+    // Get search parameters
+    const search = req.query.search || '';
+    
+    // Build query
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { youtubeId: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+    
+    // Get users with pagination
+    const users = await User.find(query)
+      .sort({ lastLogin: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    // Get total count for pagination
+    const totalUsers = await User.countDocuments(query);
+    
+    res.render('admin/users', {
+      users,
+      currentPage: page,
+      totalPages: Math.ceil(totalUsers / limit),
+      totalUsers,
+      search,
+      showNav: true
+    });
   } catch (error) {
     console.error('Users list error:', error);
     res.status(500).render('error', { 
-      message: 'Failed to load users' 
+      message: 'Failed to load users list',
+      showNav: false
     });
   }
 });
 
-// New campaign page
-router.get('/campaigns/new', isAdminAuthenticated, async (req, res) => {
+// User details
+router.get('/users/:id', isAdminAuthenticated, async (req, res) => {
   try {
-    const authorizedUsers = await User.countDocuments({ isAuthorized: true });
-    res.render('admin/new-campaign', { authorizedUsers }); // Use the fixed template
-  } catch (error) {
-    console.error('New campaign page error:', error);
-    res.status(500).render('error', { 
-      message: 'Failed to load new campaign page' 
-    });
-  }
-});
-
-// Create new campaign
-router.post('/campaigns', isAdminAuthenticated, async (req, res) => {
-  try {
-    const { channelUrl, targetSubscribers } = req.body;
+    const user = await User.findById(req.params.id);
     
-    // Get an authorized user to fetch channel info - MOVED THIS BEFORE USING IT
-    const authorizedUser = await User.findOne({ 
-      isAuthorized: true,
-      accessToken: { $exists: true }
-    });
-    
-    if (!authorizedUser) {
-      return res.status(400).render('error', { 
-        message: 'No authorized users available to fetch channel info' 
-      });
-    }
-    
-    // Use the extractChannelId function from youtube.js
-    let channelId;
-    try {
-      channelId = await youtubeUtils.extractChannelId(
-        channelUrl, 
-        authorizedUser.accessToken, 
-        authorizedUser.refreshToken
-      );
-    } catch (error) {
-      console.error('Channel ID extraction error:', error);
-      return res.status(400).render('error', { 
-        message: `Failed to extract channel ID: ${error.message}` 
-      });
-    }
-    
-    // Create OAuth client for API calls
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
-    );
-    
-    // Set credentials
-    oauth2Client.setCredentials({
-      access_token: authorizedUser.accessToken,
-      refresh_token: authorizedUser.refreshToken
-    });
-    
-    // Get channel info
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: oauth2Client
-    });
-    
-    const channelResponse = await youtube.channels.list({
-      part: 'snippet,statistics',
-      id: channelId
-    });
-    
-    if (!channelResponse.data.items || channelResponse.data.items.length === 0) {
+    if (!user) {
       return res.status(404).render('error', { 
-        message: 'Channel not found' 
+        message: 'User not found',
+        showNav: true
       });
     }
     
-    const channelInfo = channelResponse.data.items[0];
-    
-    // Create new campaign
-    const campaign = new Campaign({
-      channelId,
-      channelName: channelInfo.snippet.title,
-      channelUrl,
-      thumbnailUrl: channelInfo.snippet.thumbnails.default.url,
-      subscriberCount: channelInfo.statistics.subscriberCount,
-      targetSubscribers: targetSubscribers || 0,
-      status: 'pending',
-      createdBy: req.session.adminId
+    res.render('admin/user-details', {
+      user,
+      showNav: true
     });
-    
-    await campaign.save();
-    
-    res.redirect(`/admin/campaigns/${campaign._id}`);
-    
   } catch (error) {
-    console.error('Create campaign error:', error);
+    console.error('User details error:', error);
     res.status(500).render('error', { 
-      message: 'Failed to create campaign' 
+      message: 'Failed to load user details',
+      showNav: false
     });
   }
 });
 
-// View campaign
-router.get('/campaigns/:id', isAdminAuthenticated, async (req, res) => {
-  try {
-    const campaign = await Campaign.findById(req.params.id);
-    
-    if (!campaign) {
-      return res.status(404).render('error', { 
-        message: 'Campaign not found' 
-      });
-    }
-    
-    const authorizedUsers = await User.countDocuments({ isAuthorized: true });
-    
-    res.render('admin/campaign-detail', {
-      campaign,
-      authorizedUsers
-    });
-    
-  } catch (error) {
-    console.error('Campaign detail error:', error);
-    res.status(500).render('error', { 
-      message: 'Failed to load campaign details' 
-    });
-  }
-});
-
-// List all campaigns
+// Campaigns list
 router.get('/campaigns', isAdminAuthenticated, async (req, res) => {
   try {
-    const campaigns = await Campaign.find().sort({ createdAt: -1 });
-    res.render('admin/campaigns', { campaigns });
+    // Get pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Get campaigns with pagination
+    const campaigns = await Campaign.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    // Get total count for pagination
+    const totalCampaigns = await Campaign.countDocuments();
+    
+    res.render('admin/campaigns', {
+      campaigns,
+      currentPage: page,
+      totalPages: Math.ceil(totalCampaigns / limit),
+      totalCampaigns,
+      showNav: true
+    });
   } catch (error) {
     console.error('Campaigns list error:', error);
     res.status(500).render('error', { 
-      message: 'Failed to load campaigns' 
-    });
-  }
-});
-
-// Execute campaign (subscribe users to channel)
-router.post('/campaigns/:id/execute', isAdminAuthenticated, async (req, res) => {
-  try {
-    const campaign = await Campaign.findById(req.params.id);
-    
-    if (!campaign) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Campaign not found' 
-      });
-    }
-    
-    // Update campaign status
-    campaign.status = 'in-progress';
-    await campaign.save();
-    
-    // Get all authorized users
-    const users = await User.find({ isAuthorized: true });
-    
-    // Process subscriptions in batches
-    const batchSize = 10; // Process 10 users at a time
-    const batches = Math.ceil(users.length / batchSize);
-    
-    let successCount = 0;
-    let failCount = 0;
-    
-    // Process each batch
-    for (let i = 0; i < batches; i++) {
-      const start = i * batchSize;
-      const end = Math.min(start + batchSize, users.length);
-      const batchUsers = users.slice(start, end);
-      
-      // Process users in parallel
-      const results = await Promise.all(
-        batchUsers.map(user => subscribeUserToChannel(user, campaign))
-      );
-      
-      // Count successes and failures
-      results.forEach(result => {
-        if (result.success) {
-          successCount++;
-        } else {
-          failCount++;
-        }
-      });
-    }
-    
-    // Update campaign status
-    campaign.status = 'completed';
-    campaign.actualSubscribers = successCount;
-    campaign.completedAt = new Date();
-    await campaign.save();
-    
-    res.json({
-      success: true,
-      message: `Campaign executed: ${successCount} successful subscriptions, ${failCount} failed`,
-      successCount,
-      failCount
-    });
-    
-  } catch (error) {
-    console.error('Execute campaign error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to execute campaign' 
-    });
-  }
-});
-
-// Helper function to subscribe a user to a channel
-async function subscribeUserToChannel(user, campaign) {
-  try {
-    // Create OAuth client
-    const oauth2Client = new google.auth.OAuth2(
-      process.env.YOUTUBE_CLIENT_ID,
-      process.env.YOUTUBE_CLIENT_SECRET,
-      process.env.YOUTUBE_REDIRECT_URI
-    );
-    
-    // Check if user has valid tokens
-    if (!user.accessToken || !user.refreshToken) {
-      console.error('Missing tokens for user:', user._id);
-      
-      // Record subscription failure
-      user.subscriptionHistory.push({
-        channelId: campaign.channelId,
-        channelName: campaign.channelName,
-        success: false,
-        errorMessage: 'Missing authentication tokens'
-      });
-      await user.save();
-      
-      // Update campaign subscriber record
-      campaign.subscribers.push({
-        userId: user._id,
-        status: 'failed',
-        errorMessage: 'Missing authentication tokens'
-      });
-      await campaign.save();
-      
-      return { success: false, error: 'Missing authentication tokens' };
-    }
-    
-    // Check if token is expired and refresh if needed
-    if (new Date() > new Date(user.tokenExpiry)) {
-      try {
-        oauth2Client.setCredentials({
-          refresh_token: user.refreshToken
-        });
-        
-        const refreshResponse = await oauth2Client.refreshAccessToken();
-        
-        // Verify tokens exist before accessing properties
-        if (!refreshResponse || !refreshResponse.tokens) {
-          throw new Error('Failed to get tokens from refresh response');
-        }
-        
-        const tokens = refreshResponse.tokens;
-        
-        // Update user tokens
-        user.accessToken = tokens.access_token;
-        if (tokens.refresh_token) {
-          user.refreshToken = tokens.refresh_token;
-        }
-        user.tokenExpiry = new Date(tokens.expiry_date);
-        await user.save();
-      } catch (refreshError) {
-        console.error('Token refresh error:', refreshError);
-        
-        // Record subscription failure
-        user.subscriptionHistory.push({
-          channelId: campaign.channelId,
-          channelName: campaign.channelName,
-          success: false,
-          errorMessage: 'Failed to refresh access token'
-        });
-        await user.save();
-        
-        // Update campaign subscriber record
-        campaign.subscribers.push({
-          userId: user._id,
-          status: 'failed',
-          errorMessage: 'Failed to refresh access token'
-        });
-        await campaign.save();
-        
-        return { success: false, error: 'Token refresh failed' };
-      }
-    }
-    
-    // Set credentials
-    oauth2Client.setCredentials({
-      access_token: user.accessToken,
-      refresh_token: user.refreshToken
-    });
-    
-    // Create YouTube API client
-    const youtube = google.youtube({
-      version: 'v3',
-      auth: oauth2Client
-    });
-    
-    // Subscribe to channel
-    await youtube.subscriptions.insert({
-      part: 'snippet',
-      requestBody: {
-        snippet: {
-          resourceId: {
-            kind: 'youtube#channel',
-            channelId: campaign.channelId
-          }
-        }
-      }
-    });
-    
-    // Record successful subscription
-    user.subscriptionHistory.push({
-      channelId: campaign.channelId,
-      channelName: campaign.channelName,
-      success: true
-    });
-    await user.save();
-    
-    // Update campaign subscriber record
-    campaign.subscribers.push({
-      userId: user._id,
-      status: 'success',
-      subscribedAt: new Date()
-    });
-    await campaign.save();
-    
-    return { success: true };
-    
-  } catch (error) {
-    console.error(`Subscription error for user ${user._id}:`, error);
-    
-    // Record subscription failure
-    user.subscriptionHistory.push({
-      channelId: campaign.channelId,
-      channelName: campaign.channelName,
-      success: false,
-      errorMessage: error.message
-    });
-    await user.save();
-    
-    // Update campaign subscriber record
-    campaign.subscribers.push({
-      userId: user._id,
-      status: 'failed',
-      errorMessage: error.message
-    });
-    await campaign.save();
-    
-    return { success: false, error: error.message };
-  }
-}
- 
-router.post('/users/authorize-all', isAdminAuthenticated, async (req, res) => {
-  try {
-    // Find all unauthorized users
-    const users = await User.find({ isAuthorized: false });
-    
-    if (users.length === 0) {
-      return res.json({
-        success: true,
-        message: 'No unauthorized users found',
-        authorizedCount: 0
-      });
-    }
-    
-    // Update all users to authorized status
-    const updateResult = await User.updateMany(
-      { isAuthorized: false },
-      { $set: { isAuthorized: true } }
-    );
-    
-    res.json({
-      success: true,
-      message: `${updateResult.modifiedCount} users authorized successfully`,
-      authorizedCount: updateResult.modifiedCount
-    });
-    
-  } catch (error) {
-    console.error('Bulk authorization error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to authorize users'
-    });
-  }
-});
-
-// Toggle user authorization status
-// Delete user route
-router.post('/users/:loginId/delete', isAdminAuthenticated, async (req, res) => {
-  try {
-    const { loginId } = req.params;
-    const user = await User.findOne({ loginId });
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-    
-    // Delete the user
-    await User.deleteOne({ loginId });
-    
-    res.json({
-      success: true,
-      message: 'User deleted successfully'
-    });
-    
-  } catch (error) {
-    console.error('User deletion error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to delete user'
-    });
-  }
-});
-
-router.post('/users/:loginId/toggle-auth', isAdminAuthenticated, async (req, res) => {
-  try {
-    const { loginId } = req.params;
-    const user = await User.findOne({ loginId });
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-    
-    // Toggle authorization status
-    user.isAuthorized = !user.isAuthorized;
-    await user.save();
-    
-    res.json({
-      success: true,
-      message: `User ${user.isAuthorized ? 'authorized' : 'unauthorized'} successfully`,
-      isAuthorized: user.isAuthorized
-    });
-    
-  } catch (error) {
-    console.error('Toggle authorization error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to toggle user authorization'
+      message: 'Failed to load campaigns list',
+      showNav: false
     });
   }
 });
 
 // Admin logout
 router.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/admin/login');
+  // Clear admin session
+  req.session.isAdminAuthenticated = false;
+  req.session.adminId = null;
+  
+  res.redirect('/abc/xxx/login');
 });
 
 module.exports = router;
