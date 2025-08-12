@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.disabled = true;
                 this.textContent = 'Processing...';
                 
-                fetch(`/admin/campaigns/${campaignId}/execute`, {
+                fetch(`/abc/xxx/campaigns/${campaignId}/execute`, {
                     method: 'POST'
                 })
                     .then(response => response.json())

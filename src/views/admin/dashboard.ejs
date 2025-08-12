@@ -4,8 +4,8 @@
     <div class="dashboard-header">
         <h2 class="glitch-text">Admin Dashboard</h2>
         <div class="dashboard-actions">
-            <a href="/admin/campaigns/new" class="btn btn-primary">New Campaign</a>
-            <a href="/admin/users" class="btn btn-secondary">Manage Users</a>
+            <a href="/abc/xxx/campaigns/new" class="btn btn-primary">New Campaign</a>
+            <a href="/abc/xxx/users" class="btn btn-secondary">Manage Users</a>
         </div>
     </div>
     
@@ -72,7 +72,7 @@
                 </div>
                 <h4>Create New Campaign</h4>
                 <p>Start a new subscription campaign for all authorized users</p>
-                <a href="/admin/campaigns/new" class="btn btn-primary">New Campaign</a>
+                <a href="/abc/xxx/campaigns/new" class="btn btn-primary">New Campaign</a>
             </div>
             
             <div class="quick-action-card">
@@ -83,7 +83,7 @@
                 </div>
                 <h4>Manage Users</h4>
                 <p>View and manage all authorized users</p>
-                <a href="/admin/users" class="btn btn-primary">View Users</a>
+                <a href="/abc/xxx/users" class="btn btn-primary">View Users</a>
             </div>
         </div>
     </div>
@@ -91,7 +91,7 @@
     <div class="dashboard-section">
         <div class="section-title">
             <h3>Recent Campaigns</h3>
-            <a href="/admin/campaigns" class="view-all-link">View All <span class="arrow">→</span></a>
+            <a href="/abc/xxx/campaigns" class="view-all-link">View All <span class="arrow">→</span></a>
         </div>
         
         <div class="terminal-table">
@@ -130,7 +130,7 @@
                                     <td><%= campaign.actualSubscribers || 0 %> / <%= campaign.targetSubscribers || 'All' %></td>
                                     <td><%= new Date(campaign.createdAt).toLocaleDateString() %></td>
                                     <td>
-                                        <a href="/admin/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
+                                        <a href="/abc/xxx/campaigns/<%= campaign._id %>" class="btn btn-small btn-secondary">View</a>
                                     </td>
                                 </tr>
                             <% }); %>
