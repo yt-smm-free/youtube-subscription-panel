@@ -86,41 +86,63 @@ router.get('/google/callback', async (req, res) => {
       auth: oauth2Client
     });
     
-    // Get channel info with error handling
-    let channelResponse;
+    // Default user info in case API calls fail
+    let youtubeId = `user-${Date.now()}`;
+    let channelTitle = 'YouTube User';
+    let profilePictureUrl = '';
+    let userEmail = '';
+    
+    // Try to get channel info
     try {
-      channelResponse = await youtube.channels.list({
+      const channelResponse = await youtube.channels.list({
         part: 'snippet',
         mine: true
       });
       
-      if (!channelResponse.data || !channelResponse.data.items || channelResponse.data.items.length === 0) {
-        throw new Error('No channel data returned from YouTube API');
+      console.log('YouTube API response:', JSON.stringify(channelResponse.data, null, 2));
+      
+      if (channelResponse.data && 
+          channelResponse.data.items && 
+          channelResponse.data.items.length > 0) {
+        
+        const channel = channelResponse.data.items[0];
+        youtubeId = channel.id;
+        channelTitle = channel.snippet.title || 'YouTube User';
+        profilePictureUrl = channel.snippet.thumbnails?.default?.url || '';
+      } else {
+        console.warn('No channel data returned from YouTube API');
       }
     } catch (apiError) {
       console.error('YouTube API error:', apiError);
-      return res.status(500).render('error', { 
-        message: 'Failed to retrieve YouTube channel data: ' + apiError.message,
-        showNav: false
-      });
+      // Continue with default values
     }
     
-    // Get user profile with error handling
-    let peopleResponse;
+    // Try to get user profile
     try {
-      peopleResponse = await people.people.get({
+      const peopleResponse = await people.people.get({
         resourceName: 'people/me',
         personFields: 'emailAddresses,names,photos'
       });
+      
+      if (peopleResponse.data) {
+        if (peopleResponse.data.emailAddresses && peopleResponse.data.emailAddresses.length > 0) {
+          userEmail = peopleResponse.data.emailAddresses[0].value;
+        }
+        
+        // If we didn't get a profile picture from YouTube, try to get it from People API
+        if (!profilePictureUrl && peopleResponse.data.photos && peopleResponse.data.photos.length > 0) {
+          profilePictureUrl = peopleResponse.data.photos[0].url;
+        }
+        
+        // If we didn't get a name from YouTube, try to get it from People API
+        if (channelTitle === 'YouTube User' && peopleResponse.data.names && peopleResponse.data.names.length > 0) {
+          channelTitle = peopleResponse.data.names[0].displayName || 'YouTube User';
+        }
+      }
     } catch (apiError) {
       console.error('People API error:', apiError);
-      // Continue even if people API fails - it's not critical
-      peopleResponse = { data: {} };
+      // Continue with default values
     }
-    
-    const channel = channelResponse.data.items[0];
-    const profile = peopleResponse.data || {};
-    const youtubeId = channel.id;
     
     // Check if user already exists
     let user = await User.findOne({ youtubeId });
@@ -140,9 +162,9 @@ router.get('/google/callback', async (req, res) => {
     user.accessToken = tokens.access_token;
     user.refreshToken = tokens.refresh_token;
     user.tokenExpiry = new Date(tokens.expiry_date);
-    user.name = channel.snippet.title;
-    user.profilePicture = channel.snippet.thumbnails?.default?.url || '';
-    user.email = profile.emailAddresses && profile.emailAddresses.length > 0 ? profile.emailAddresses[0].value : '';
+    user.name = channelTitle;
+    user.profilePicture = profilePictureUrl;
+    user.email = userEmail;
     user.isAuthorized = true;
     user.lastLogin = new Date();
     
@@ -208,41 +230,63 @@ router.get('/youtube/callback', async (req, res) => {
       auth: oauth2Client
     });
     
-    // Get channel info with error handling
-    let channelResponse;
+    // Default user info in case API calls fail
+    let youtubeId = `user-${Date.now()}`;
+    let channelTitle = 'YouTube User';
+    let profilePictureUrl = '';
+    let userEmail = '';
+    
+    // Try to get channel info
     try {
-      channelResponse = await youtube.channels.list({
+      const channelResponse = await youtube.channels.list({
         part: 'snippet',
         mine: true
       });
       
-      if (!channelResponse.data || !channelResponse.data.items || channelResponse.data.items.length === 0) {
-        throw new Error('No channel data returned from YouTube API');
+      console.log('YouTube API response:', JSON.stringify(channelResponse.data, null, 2));
+      
+      if (channelResponse.data && 
+          channelResponse.data.items && 
+          channelResponse.data.items.length > 0) {
+        
+        const channel = channelResponse.data.items[0];
+        youtubeId = channel.id;
+        channelTitle = channel.snippet.title || 'YouTube User';
+        profilePictureUrl = channel.snippet.thumbnails?.default?.url || '';
+      } else {
+        console.warn('No channel data returned from YouTube API');
       }
     } catch (apiError) {
       console.error('YouTube API error:', apiError);
-      return res.status(500).render('error', { 
-        message: 'Failed to retrieve YouTube channel data: ' + apiError.message,
-        showNav: false
-      });
+      // Continue with default values
     }
     
-    // Get user profile with error handling
-    let peopleResponse;
+    // Try to get user profile
     try {
-      peopleResponse = await people.people.get({
+      const peopleResponse = await people.people.get({
         resourceName: 'people/me',
         personFields: 'emailAddresses,names,photos'
       });
+      
+      if (peopleResponse.data) {
+        if (peopleResponse.data.emailAddresses && peopleResponse.data.emailAddresses.length > 0) {
+          userEmail = peopleResponse.data.emailAddresses[0].value;
+        }
+        
+        // If we didn't get a profile picture from YouTube, try to get it from People API
+        if (!profilePictureUrl && peopleResponse.data.photos && peopleResponse.data.photos.length > 0) {
+          profilePictureUrl = peopleResponse.data.photos[0].url;
+        }
+        
+        // If we didn't get a name from YouTube, try to get it from People API
+        if (channelTitle === 'YouTube User' && peopleResponse.data.names && peopleResponse.data.names.length > 0) {
+          channelTitle = peopleResponse.data.names[0].displayName || 'YouTube User';
+        }
+      }
     } catch (apiError) {
       console.error('People API error:', apiError);
-      // Continue even if people API fails - it's not critical
-      peopleResponse = { data: {} };
+      // Continue with default values
     }
-    
-    const channel = channelResponse.data.items[0];
-    const profile = peopleResponse.data || {};
-    const youtubeId = channel.id;
     
     let user;
     
@@ -263,6 +307,7 @@ router.get('/youtube/callback', async (req, res) => {
           user = new User({
             loginId: newLoginId,
             masterLinkId: masterLinkId, // Link back to the master link
+            youtubeId: youtubeId,
             isAuthorized: true // Auto-authorize users from master links
           });
         }
@@ -276,6 +321,9 @@ router.get('/youtube/callback', async (req, res) => {
             showNav: false
           });
         }
+        
+        // Update the YouTube ID
+        user.youtubeId = youtubeId;
       }
     } else {
       // Direct login without a pre-existing session
@@ -295,13 +343,12 @@ router.get('/youtube/callback', async (req, res) => {
     }
     
     // Update user with YouTube info
-    user.youtubeId = youtubeId;
     user.accessToken = tokens.access_token;
     user.refreshToken = tokens.refresh_token;
     user.tokenExpiry = new Date(tokens.expiry_date);
-    user.name = channel.snippet.title;
-    user.profilePicture = channel.snippet.thumbnails?.default?.url || '';
-    user.email = profile.emailAddresses && profile.emailAddresses.length > 0 ? profile.emailAddresses[0].value : '';
+    user.name = channelTitle;
+    user.profilePicture = profilePictureUrl;
+    user.email = userEmail;
     user.isAuthorized = true;
     user.lastLogin = new Date();
     
