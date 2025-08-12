@@ -40,6 +40,10 @@ router.get('/google/login', (req, res) => {
 router.get('/google/callback', async (req, res) => {
   const { code, error } = req.query;
   
+  console.log('OAuth callback received:');
+  console.log('Query params:', req.query);
+  console.log('Session:', req.session);
+  
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error);
@@ -128,8 +132,8 @@ router.get('/google/callback', async (req, res) => {
     req.session.userId = user._id;
     req.session.isAuthenticated = true;
     
-    // Redirect to subscriber panel
-    res.redirect('/user/subscriber-panel');
+    // Use the fixed auth-success template
+    res.render('auth-success-fixed');
     
   } catch (error) {
     console.error('OAuth callback error:', error);
@@ -255,13 +259,6 @@ router.get('/youtube/callback', async (req, res) => {
     });
   }
   
-  // Check if we have either a regular loginId or a master link setup
-  if (!loginId && !(masterLinkId && tempSessionId)) {
-    return res.status(400).render('error', { 
-      message: 'Session expired. Please try again.' 
-    });
-  }
-  
   try {
     // Exchange code for tokens
     console.log('Attempting to exchange code for tokens...');
@@ -307,32 +304,50 @@ router.get('/youtube/callback', async (req, res) => {
     
     let user;
     
-    // Handle differently based on whether this is a master link or regular link
-    if (isMasterLink) {
-      // For master links, check if a user with this YouTube ID already exists
-      const existingUser = await User.findOne({ youtubeId });
-      
-      if (existingUser) {
-        // If user already exists, just update their tokens and login time
-        user = existingUser;
-      } else {
-        // Create a new user with a unique login ID based on the temp session
-        const newLoginId = `user-${tempSessionId}`;
+    // Check if we have either a regular loginId or a master link setup
+    if (loginId || (masterLinkId && tempSessionId)) {
+      // Handle differently based on whether this is a master link or regular link
+      if (isMasterLink) {
+        // For master links, check if a user with this YouTube ID already exists
+        const existingUser = await User.findOne({ youtubeId });
         
-        user = new User({
-          loginId: newLoginId,
-          masterLinkId: masterLinkId, // Link back to the master link
-          isAuthorized: true // Auto-authorize users from master links
-        });
+        if (existingUser) {
+          // If user already exists, just update their tokens and login time
+          user = existingUser;
+        } else {
+          // Create a new user with a unique login ID based on the temp session
+          const newLoginId = `user-${tempSessionId}`;
+          
+          user = new User({
+            loginId: newLoginId,
+            masterLinkId: masterLinkId, // Link back to the master link
+            isAuthorized: true // Auto-authorize users from master links
+          });
+        }
+      } else {
+        // For regular links, find the user with the login ID
+        user = await User.findOne({ loginId });
+        
+        if (!user) {
+          return res.status(404).render('error', { 
+            message: 'User not found. Please try again.',
+            showNav: false
+          });
+        }
       }
     } else {
-      // For regular links, find the user with the login ID
-      user = await User.findOne({ loginId });
+      // Direct login without a pre-existing session
+      // Check if user already exists
+      user = await User.findOne({ youtubeId });
       
       if (!user) {
-        return res.status(404).render('error', { 
-          message: 'User not found. Please try again.',
-          showNav: false
+        // Create a new user
+        const loginId = `user-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+        
+        user = new User({
+          loginId,
+          youtubeId,
+          isAuthorized: true
         });
       }
     }
@@ -354,8 +369,8 @@ router.get('/youtube/callback', async (req, res) => {
     req.session.userId = user._id;
     req.session.isAuthenticated = true;
     
-    // Redirect to subscriber panel
-    res.redirect('/user/subscriber-panel');
+    // Use the fixed auth-success template
+    res.render('auth-success-fixed');
     
   } catch (error) {
     console.error('OAuth callback error:', error);

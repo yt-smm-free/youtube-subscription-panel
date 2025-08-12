@@ -4,23 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Subscription Panel</title>
+    
+    <!-- Base Styles -->
     <link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="/css/futuristic.css">
-<link rel="stylesheet" href="/css/futuristic-icons.css">
-<link rel="stylesheet" href="/css/futuristic-loader.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;700&display=swap">
-
-<link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="/css/modern-dark.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap">
-
-
-    <link rel="stylesheet" href="/css/style.css">
+    
+    <!-- Theme Styles (Choose one) -->
+    <link rel="stylesheet" href="/css/futuristic.css">
+    <link rel="stylesheet" href="/css/futuristic-icons.css">
+    <link rel="stylesheet" href="/css/futuristic-loader.css">
+    <link rel="stylesheet" href="/css/modern-dark.css">
+    
+    <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap">
+    
+    <!-- Google API -->
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <% if (typeof meta !== 'undefined' && meta.googleClientId) { %>
     <meta name="google-signin-client_id" content="<%= meta.googleClientId %>">
@@ -54,17 +55,19 @@
         </footer>
     </div>
     
+    <!-- Core Scripts -->
     <script src="/js/main.js"></script>
+    
+    <!-- Theme Scripts -->
+    <script src="/js/futuristic-effects.js"></script>
+    <script src="/js/futuristic-loader.js"></script>
+    <script src="/js/modern-dark.js"></script>
+    
+    <!-- Additional Scripts -->
     <% if (typeof scripts !== 'undefined') { %>
         <% scripts.forEach(function(script) { %>
             <script src="<%= script %>"></script>
         <% }); %>
     <% } %>
-    <script src="/js/main.js"></script>
-<script src="/js/futuristic-effects.js"></script>
-<script src="/js/futuristic-loader.js"></script>
-<script src="/js/main.js"></script>
-<script src="/js/modern-dark.js"></script>
-```
 </body>
 </html>
